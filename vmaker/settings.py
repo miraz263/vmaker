@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'apps.ai_engine',
     'apps.renderer',
     'apps.users',
+    'apps.assets.apps.AssetsConfig',
 ]
 
 

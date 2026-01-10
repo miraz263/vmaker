@@ -7,6 +7,9 @@ from django.urls import path, include
 from django.shortcuts import render
 from rest_framework.routers import DefaultRouter
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 from apps.projects.views import ProjectViewSet
 from apps.stories.views import StoryViewSet
 
@@ -36,3 +39,12 @@ urlpatterns = [
     # Web pages
     path('editor/', scene_editor, name='scene_editor'),
 ]
+
+# -------------------
+# Media files (DEV only)
+# -------------------
+if settings.DEBUG:
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT
+    )
