@@ -1,0 +1,151 @@
+# === TIME & WEATHER ===
+ভোর = morning | 60
+ভোরবেলা = morning | 60
+সকাল = morning | 55
+দুপুর = noon | 50
+বিকেল = afternoon | 50
+সন্ধ্যা = evening | 55
+রাত = night | 60
+মধ্যরাত = night | 65
+রাতভর = night | 65
+অন্ধকার = night | 70
+চাঁদ = night | 45
+তারাভরা = night | 45
+
+বৃষ্টি = rain | 80
+বৃষ্টিভেজা = rain | 85
+বৃষ্টির = rain | 75
+ঝড় = storm | 90
+ঝড়ো = storm | 85
+মেঘ = cloudy | 60
+মেঘলা = cloudy | 65
+রোদ = sunny | 60
+সূর্য = sunny | 55
+সূর্যাস্ত = sunset | 70
+সূর্যোদয় = sunrise | 70
+কুয়াশা = fog | 80
+শীত = winter | 85
+গ্রীষ্ম = summer | 80
+বর্ষা = rain | 90
+
+# === NATURE ===
+নদী = river | 100
+নদীর = river | 95
+খাল = canal | 90
+পুকুর = pond | 90
+লেক = lake | 85
+সমুদ্র = sea | 100
+সাগর = sea | 95
+তীর = shore | 80
+বালুকাবেলা = beach | 85
+
+আকাশ = sky | 20
+নীল আকাশ = sky | 25
+পাহাড় = mountain | 80
+টিলা = hill | 75
+বন = forest | 85
+জঙ্গল = forest | 85
+বাঁশঝাড় = forest | 80
+
+বাগান = garden | 70
+ফুলবাগান = garden | 75
+ফুল = garden | 60
+ঘাস = grass | 60
+মাঠ = field | 70
+ধানক্ষেত = field | 80
+গাছ = tree | 65
+বটগাছ = tree | 75
+আমগাছ = tree | 75
+
+# === VILLAGE LIFE ===
+গ্রাম = village | 85
+গ্রামের = village | 85
+পল্লী = village | 80
+কাঁচা পথ = road | 90
+মাটির পথ = road | 85
+হাঁটাপথ = road | 80
+পথ = road | 60
+রাস্তা = road | 65
+খেতের আইল = field | 85
+গোয়ালঘর = village | 80
+খামার = farm | 85
+গরুর খোঁয়াড় = farm | 90
+নলকূপ = village | 75
+পুকুরপাড় = village | 85
+হাট = market | 75
+গ্রাম্য বাজার = market | 80
+
+# === CITY LIFE ===
+শহর = city | 85
+নগর = city | 85
+ব্যস্ত শহর = city | 90
+রাস্তার মোড় = street | 80
+ফুটপাত = street | 75
+বাজার = market | 70
+শপিংমল = mall | 80
+মল = mall | 75
+দোকান = shop | 65
+দোকানের সামনে = shop | 70
+বাসস্ট্যান্ড = station | 85
+রেলস্টেশন = station | 90
+স্টেশন = station | 70
+পার্ক = park | 75
+খেলার মাঠ = park | 80
+চিড়িয়াখানা = zoo | 85
+হাসপাতাল = hospital | 90
+স্কুল = school | 85
+বিদ্যালয় = school | 85
+কলেজ = college | 85
+বিশ্ববিদ্যালয় = university | 90
+অফিস = office | 80
+কারখানা = factory | 85
+
+# === HOME & INDOOR ===
+বাড়ি = house | 90
+বাড়ির ভিতর = house | 95
+ঘর = house | 80
+ঘরের ভিতর = house | 90
+বারান্দা = house | 75
+জানালা = house | 75
+দরজা = house | 70
+ছাদ = rooftop | 80
+রান্নাঘর = kitchen | 85
+রান্না ঘর = kitchen | 85
+ডাইনিং = dining | 75
+বৈঠকখানা = living_room | 80
+শোবার ঘর = bedroom | 85
+বিছানা = bedroom | 80
+আঙিনা = yard | 85
+উঠোন = yard | 90
+
+# === RELIGIOUS & CULTURAL ===
+মসজিদ = mosque | 90
+মন্দির = temple | 90
+গির্জা = church | 90
+পূজামণ্ডপ = festival | 95
+মেলা = festival | 85
+উৎসব = festival | 80
+ঈদ = festival | 95
+পূজা = festival | 95
+বিয়ে = wedding | 90
+অনুষ্ঠান = ceremony | 85
+শ্মশান = ritual | 90
+কবরস্থান = ritual | 90
+
+# === ABSTRACT / EMOTIONAL ===
+স্বপ্ন = abstract | 40
+মনের ভিতর = abstract | 45
+ভাবনায় = abstract | 45
+কল্পনায় = abstract | 45
+স্মৃতিতে = abstract | 40
+আশা = abstract | 40
+ভয় = abstract | 40
+ভালোবাসা = abstract | 45
+কষ্ট = abstract | 45
+আনন্দ = abstract | 45
+
+ছাদ = rooftop | 90
+শহর = city | 90
+বাসা = house | 85
+বাড়ি = house | 85
+

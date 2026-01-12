@@ -1,0 +1,110 @@
+# === MAIN CHARACTERS (Highest Priority) ===
+রাহুল = rahul | 100
+নীলা = nila | 100
+ওয়ারিনা = warina | 100
+আরিফ = arif | 100
+সুমন = sumon | 100
+রিমা = rima | 100
+মিতা = mita | 100
+তানিয়া = tania | 100
+সাব্বির = sabbir | 100
+নিশাত = nishat | 100
+ইমন = imon | 100
+ফাহিম = fahim | 100
+নাঈম = naim | 100
+শাওন = shawon | 100
+রিফাত = rifat | 100
+
+# === FAMILY (High Priority) ===
+মায়ের = mother | 95
+মা = mother | 90
+বাবার = father | 95
+বাবা = father | 90
+ছোট ছেলে = boy | 95
+ছেলে = boy | 90
+শিশু = child | 85
+বাচ্চা = child | 85
+ছোট মেয়ে = girl | 95
+মেয়ে = girl | 90
+ভাই = brother | 90
+বোন = sister | 90
+দাদা = grandfather | 85
+দাদি = grandmother | 85
+নানা = grandfather | 85
+নানি = grandmother | 85
+চাচা = uncle | 85
+খালা = aunt | 85
+চাচী = aunt | 85
+ফুপু = aunt | 85
+
+# === PEOPLE / ROLES ===
+অচেনা লোক = stranger | 85
+মানুষ = human | 80
+লোক = human | 75
+নারী = woman | 80
+পুরুষ = man | 80
+ছাত্র = student | 80
+ছাত্রী = student | 80
+শিক্ষক = teacher | 85
+মাস্টার = teacher | 80
+ডাক্তার = doctor | 85
+নার্স = nurse | 80
+পুলিশ = police | 85
+কনস্টেবল = police | 80
+চোর = thief | 85
+দোকানদার = shopkeeper | 80
+রিকশাচালক = driver | 85
+বাসচালক = driver | 85
+চালক = driver | 75
+কৃষক = farmer | 85
+জেলে = fisherman | 85
+শ্রমিক = worker | 80
+কামার = worker | 75
+নৌকা মাঝি = boatman | 85
+
+# === KIDS & EMOTION (Medium Priority) ===
+কাঁদছে = child | 70
+হাসছে = child | 70
+ভীত = child | 65
+আনন্দিত = child | 65
+ভয় পেয়েছে = child | 65
+খুশি = human | 60
+দুঃখী = human | 60
+চিন্তিত = human | 60
+
+# === ANIMALS & BIRDS ===
+পেঁচা = owl | 85
+পাখি = bird | 80
+চড়ুই = bird | 80
+কাক = bird | 80
+হাঁস = bird | 80
+মুরগি = bird | 80
+কুকুর = dog | 85
+বিড়াল = cat | 85
+গরু = cow | 80
+ছাগল = goat | 80
+ঘোড়া = horse | 80
+হাতি = elephant | 85
+বাঘ = tiger | 85
+সিংহ = lion | 85
+মাছ = fish | 75
+
+# === CROWD / GROUP ===
+লোকজন = crowd | 70
+মানুষজন = crowd | 70
+গ্রামবাসী = crowd | 75
+শহরবাসী = crowd | 75
+ছাত্ররা = group | 70
+শিক্ষার্থীরা = group | 70
+দল = group | 65
+পরিবার = family | 75
+
+# === ABSTRACT / ROLE (Lowest Priority) ===
+কথক = narrator | 30
+বর্ণনাকারী = narrator | 30
+চিন্তাশীল মানুষ = human | 40
+অতিথি = guest | 50
+বন্ধু = friend | 50
+শত্রু = enemy | 50
+সহযোগী = helper | 50
+

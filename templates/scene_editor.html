@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Story → Scene Editor</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -11,7 +12,7 @@
     }
     textarea {
       width: 100%;
-      height: 120px;
+      height: 140px;
       padding: 10px;
       font-size: 16px;
     }
@@ -33,74 +34,96 @@
       padding: 6px;
       margin-top: 5px;
     }
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
   </style>
 </head>
-<body>
-    <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
 
+<body>
+  <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
 
   <h1>📖 Story → Scene Editor</h1>
 
   <label><strong>গল্প লিখুন:</strong></label>
   <textarea id="storyText">
-এক সুন্দর সকাল। ওয়ারিনা তার লাল টুপি পরে বাগানে খেলতে গেল।
-সেখানে সে একটি ছোট পেঁচাকে দেখল।
+একদিন ভোরবেলায় ছোট্ট নীলা তার জানালার পাশে দাঁড়িয়ে সূর্য উঠতে দেখল।
+হঠাৎ সে দেখল একটি আহত পাখি উঠোনে পড়ে আছে।
+নীলা ধীরে ধীরে পাখিটিকে তুলে এনে পানি ও খাবার দিল।
+কয়েকদিন পর পাখিটি সুস্থ হয়ে আকাশে উড়ে গেল।
+উড়ে যাওয়ার সময় নীলার মনে হলো, ভালোবাসা কখনো হারায় না, তা ফিরে আসে।
   </textarea>
 
-  <br/>
+  <br />
   <button onclick="generateScenes()">🎬 Generate Scenes</button>
 
+  <div id="error" class="error"></div>
   <div id="scenes"></div>
 
   <script>
     async function generateScenes() {
-      const story = document.getElementById("storyText").value;
+      const story = document.getElementById("storyText").value.trim();
       const csrfToken = document.getElementById("csrfToken").value;
-    
-      const response = await fetch("/api/projects/1/generate-scenes/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrfToken
-        },
-        body: JSON.stringify({
-          story: story
-        })
-      });
-    
-      const data = await response.json();
-      renderScenes(data.scenes);
+      const errorBox = document.getElementById("error");
+      errorBox.innerText = "";
+
+      if (!story) {
+        errorBox.innerText = "গল্প লেখা ফাঁকা হতে পারে না";
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/projects/1/generate-scenes/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken
+          },
+          body: JSON.stringify({ story })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          errorBox.innerText = data.error || "Scene generate করতে সমস্যা হয়েছে";
+          return;
+        }
+
+        renderScenes(data.scenes);
+
+      } catch (err) {
+        errorBox.innerText = "Server এ সংযোগ করা যাচ্ছে না";
+      }
     }
-    
+
     function renderScenes(scenes) {
       const container = document.getElementById("scenes");
       container.innerHTML = "";
-    
+
       scenes.forEach((scene, index) => {
         const div = document.createElement("div");
         div.className = "scene";
-    
+
         div.innerHTML = `
           <h3>Scene ${index + 1}</h3>
-    
+
           <label>Background</label>
-          <input value="${scene.background}" />
-    
+          <input value="${scene.background || ''}" />
+
           <label>Characters</label>
-          <input value="${scene.characters.join(", ")}" />
-    
+          <input value="${(scene.characters || []).join(", ")}" />
+
           <label>Narration</label>
-          <input value="${scene.narration}" />
-    
+          <input value="${scene.narration || ''}" />
+
           <label>Duration (sec)</label>
-          <input type="number" value="${scene.duration}" />
+          <input type="number" value="${scene.duration || 8}" />
         `;
-    
+
         container.appendChild(div);
       });
     }
-    </script>
-    
-
+  </script>
 </body>
 </html>
