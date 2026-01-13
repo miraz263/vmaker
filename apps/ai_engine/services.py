@@ -74,10 +74,6 @@ def normalize_text(text):
     return text
 
 
-def keyword_in_text(keyword, text):
-    return keyword in text
-
-
 # =================================================
 # Auto-learn (STRICT)
 # =================================================
@@ -100,12 +96,6 @@ def auto_learn_character(name):
 
 
 def detect_unknown_names(text):
-    """
-    Only learn:
-    ✔ first meaningful noun
-    ✔ before a verb
-    ✔ NOT emotion / adverb
-    """
     words = text.split()
 
     blacklist = {
@@ -123,10 +113,7 @@ def detect_unknown_names(text):
         if not re.fullmatch(r"[অ-হ]+", clean):
             continue
 
-        if clean in blacklist:
-            continue
-
-        if clean in KNOWN_CHARACTERS:
+        if clean in blacklist or clean in KNOWN_CHARACTERS:
             continue
 
         if len(clean) < 3 or len(clean) > 6:
@@ -141,48 +128,71 @@ def detect_unknown_names(text):
 # =================================================
 # Story memory
 # =================================================
-LAST_KNOWN_CHARACTER = None
 PRIMARY_CHARACTER = None
 
 
 # =================================================
-# Detection logic
+# Detection logic (UPDATED)
 # =================================================
 def detect_background(text):
     clean = normalize_text(text)
 
     for rule in BACKGROUND_KEYWORDS:
-        if len(rule.key) < 3:
-            continue
         if rule.key in clean:
-            return rule.value
+            return {
+                "key": rule.value,
+                "type": "image",
+                "asset": f"backgrounds/{rule.value}.jpg"
+            }
 
     if any(w in text for w in ["মন", "জীবন", "আনন্দ", "ক্লান্তি"]):
-        return "abstract"
+        return {
+            "key": "abstract",
+            "type": "image",
+            "asset": "backgrounds/abstract.jpg"
+        }
 
-    return "default"
+    return {
+        "key": "default",
+        "type": "image",
+        "asset": "backgrounds/default.jpg"
+    }
 
 
 def detect_characters(text):
     global PRIMARY_CHARACTER
 
     clean = normalize_text(text)
-    chars = []
+    found = []
 
     for rule in CHARACTER_KEYWORDS:
         if rule.key in clean:
-            chars.append(rule.value)
+            found.append(rule.value)
 
-    if chars:
+    if found:
         if PRIMARY_CHARACTER is None:
-            PRIMARY_CHARACTER = chars[0]
-        return list(set(chars))
+            PRIMARY_CHARACTER = found[0]
 
-    if any(p in text for p in ["সে", "তার", "তাকে", "মন", "বুঝল"]):
+        return [
+            {
+                "key": c,
+                "emotion": "neutral",
+                "position": "center",
+                "asset": f"characters/{c}.png"
+            }
+            for c in set(found)
+        ]
+
+    if any(p in text for p in ["সে", "তার", "তাকে", "বুঝল"]):
         if PRIMARY_CHARACTER:
-            return [PRIMARY_CHARACTER]
+            return [{
+                "key": PRIMARY_CHARACTER,
+                "emotion": "neutral",
+                "position": "center",
+                "asset": f"characters/{PRIMARY_CHARACTER}.png"
+            }]
 
-    return ["narrator"]
+    return []
 
 
 def calculate_duration(text):
@@ -193,23 +203,31 @@ def split_sentences(text):
     return [s.strip() for s in re.split(r"[।!?]", text) if s.strip()]
 
 
+# =================================================
+# MAIN GENERATOR (UPDATED OUTPUT)
+# =================================================
 def generate_scenes_from_story(story_text):
     global PRIMARY_CHARACTER
 
     PRIMARY_CHARACTER = None
     scenes = []
 
-    for sentence in split_sentences(story_text):
+    for idx, sentence in enumerate(split_sentences(story_text), start=1):
 
-        # auto-learn FIRST
         for name in detect_unknown_names(sentence):
             auto_learn_character(name)
 
         scenes.append({
+            "scene_id": idx,
             "background": detect_background(sentence),
             "characters": detect_characters(sentence),
-            "narration": sentence,
+            "narration": {
+                "text": sentence,
+                "voice": "female_child",
+                "lang": "bn"
+            },
             "duration": calculate_duration(sentence),
+            "transition": "fade"
         })
 
     return scenes
