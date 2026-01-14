@@ -4,13 +4,13 @@ from .api import UpdateSceneAPIView
 
 urlpatterns = [
     path(
-        'projects/<int:project_id>/generate-scenes/',
+        "projects/<int:project_id>/generate-scenes/",
         GenerateScenesAPIView.as_view(),
-        name='generate-scenes'
+        name="generate-scenes"
     ),
     path(
-        'scenes/<int:scene_id>/update/',
+        "scenes/<int:scene_id>/update/",
         UpdateSceneAPIView.as_view(),
-        name='update-scene'
+        name="update-scene"
     ),
 ]

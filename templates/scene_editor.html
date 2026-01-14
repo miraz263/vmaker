@@ -34,15 +34,12 @@
       padding: 6px;
       margin-top: 5px;
     }
-    .preview img {
-      height: 70px;
-      margin-right: 5px;
-    }
     .save-btn {
       background: #2d7ef7;
       color: white;
       border: none;
       border-radius: 4px;
+      margin-top: 8px;
     }
     .error {
       color: red;
@@ -71,162 +68,140 @@
   <div id="error" class="error"></div>
   <div id="scenes"></div>
 
-  <script>
-    async function generateScenes() {
-      const story = document.getElementById("storyText").value.trim();
-      const csrfToken = document.getElementById("csrfToken").value;
-      const errorBox = document.getElementById("error");
-      errorBox.innerText = "";
+<script>
+/* ==============================
+   Generate Scenes
+============================== */
+window.generateScenes = async function () {
+  const story = document.getElementById("storyText").value.trim();
+  const csrfToken = document.getElementById("csrfToken").value;
+  const errorBox = document.getElementById("error");
+  errorBox.innerText = "";
 
-      if (!story) {
-        errorBox.innerText = "গল্প লেখা ফাঁকা হতে পারে না";
-        return;
-      }
+  if (!story) {
+    errorBox.innerText = "গল্প লেখা ফাঁকা হতে পারে না";
+    return;
+  }
 
-      try {
-        const response = await fetch("/api/projects/1/generate-scenes/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken
-          },
-          body: JSON.stringify({ story })
-        });
+  try {
+    const res = await fetch("/api/projects/1/generate-scenes/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken
+      },
+      body: JSON.stringify({ story })
+    });
 
-        const data = await response.json();
+    const data = await res.json();
 
-        if (!response.ok) {
-          errorBox.innerText = data.error || "Scene generate করতে সমস্যা হয়েছে";
-          return;
-        }
-
-        renderScenes(data.scenes);
-
-      } catch (err) {
-        errorBox.innerText = "Server এ সংযোগ করা যাচ্ছে না";
-      }
+    if (!res.ok) {
+      errorBox.innerText = data.error || "Scene generate failed";
+      return;
     }
 
-    function renderScenes(scenes) {
-      const container = document.getElementById("scenes");
-      container.innerHTML = "";
+    renderScenes(data.scenes);
 
-      scenes.forEach((scene, index) => {
-        const div = document.createElement("div");
-        div.className = "scene";
-        div.dataset.sceneId = scene.id;   // IMPORTANT
+  } catch (e) {
+    errorBox.innerText = "Server এ সংযোগ করা যাচ্ছে না";
+  }
+};
 
-        const characterNames = (scene.characters || [])
-          .map(c => c.key)
-          .join(", ");
 
-        const characterImages = (scene.characters || [])
-          .map(c => `<img src="/media/${c.asset}" alt="${c.key}">`)
-          .join("");
+/* ==============================
+   Render Scenes + Save Button
+============================== */
+window.renderScenes = function (scenes) {
+  const container = document.getElementById("scenes");
+  container.innerHTML = "";
 
-        div.innerHTML = `
-          <h3>Scene ${scene.scene_id || index + 1}</h3>
+  scenes.forEach((scene, index) => {
+    const div = document.createElement("div");
+    div.className = "scene";
+    div.dataset.sceneId = scene.id;   // 🔥 REQUIRED
 
-          <label>Background</label>
-          <input class="bg-input" value="${scene.background?.key || ''}" />
+    const characters = scene.characters?.join(", ") || "";
 
-          <div class="preview">
-            <img src="/media/${scene.background?.asset}" alt="bg">
-          </div>
+    div.innerHTML = `
+      <h3>Scene ${index + 1}</h3>
 
-          <label>Characters (comma separated)</label>
-          <input class="characters-input" value="${characterNames}" />
+      <label>Background</label>
+      <input class="bg-input" value="${scene.background || 'bg'}">
 
-          <div class="preview">
-            ${characterImages || "<em>No character</em>"}
-          </div>
+      <label>Characters</label>
+      <input class="characters-input" value="${characters}">
 
-          <label>Narration</label>
-          <input class="narration-input" value="${scene.narration?.text || ''}" />
+      <label>Narration</label>
+      <input class="narration-input" value="${scene.narration || ''}">
 
-          <label>Duration (sec)</label>
-          <input class="duration-input" type="number" value="${scene.duration || 8}" />
+      <label>Duration</label>
+      <input class="duration-input" type="number" value="${scene.duration || 8}">
 
-          <button class="save-btn" onclick="saveScene(this)">
-            💾 Save Scene
-          </button>
-        `;
+      <button class="save-btn" onclick="saveScene(this)">
+        💾 Save Scene
+      </button>
+    `;
 
-        container.appendChild(div);
-      });
-    }
+    container.appendChild(div);
+  });
+};
 
-    async function saveScene(btn) {
-      const card = btn.closest(".scene");
-      const sceneId = card.dataset.sceneId;
 
-      const bgKey = card.querySelector(".bg-input").value.trim();
-      const narration = card.querySelector(".narration-input").value.trim();
-      const duration = parseInt(card.querySelector(".duration-input").value) || 8;
+/* ==============================
+   Save Single Scene
+============================== */
+window.saveScene = async function (btn) {
+  const card = btn.closest(".scene");
+  const sceneId = card.dataset.sceneId;
 
-      const characters = card.querySelector(".characters-input")
+  if (!sceneId) {
+    alert("Scene ID missing");
+    return;
+  }
+
+  const payload = {
+    data: {
+      background: card.querySelector(".bg-input").value.trim(),
+      characters: card.querySelector(".characters-input")
         .value.split(",")
         .map(c => c.trim())
-        .filter(Boolean)
-        .map(c => ({
-          key: c,
-          emotion: "neutral",
-          position: "center",
-          asset: `characters/${c}.png`
-        }));
-
-      const payload = {
-        data: {
-          background: {
-            key: bgKey,
-            type: "image",
-            asset: `backgrounds/${bgKey}.jpg`
-          },
-          characters: characters,
-          narration: {
-            text: narration,
-            voice: "female_child",
-            lang: "bn"
-          },
-          duration: duration,
-          transition: "fade"
-        }
-      };
-
-      try {
-        btn.innerText = "Saving...";
-        btn.disabled = true;
-
-        const res = await fetch(`/api/scenes/${sceneId}/update/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": document.getElementById("csrfToken").value
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          alert(data.error || "Save failed");
-          btn.disabled = false;
-          btn.innerText = "💾 Save Scene";
-          return;
-        }
-
-        btn.innerText = "✅ Saved";
-        setTimeout(() => {
-          btn.innerText = "💾 Save Scene";
-          btn.disabled = false;
-        }, 1200);
-
-      } catch (e) {
-        alert("Server error");
-        btn.disabled = false;
-        btn.innerText = "💾 Save Scene";
-      }
+        .filter(Boolean),
+      narration: card.querySelector(".narration-input").value.trim(),
+      duration: parseInt(card.querySelector(".duration-input").value) || 8
     }
-  </script>
+  };
+
+  btn.innerText = "Saving...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`/api/scenes/${sceneId}/update/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": document.getElementById("csrfToken").value
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Save failed");
+    } else {
+      btn.innerText = "✅ Saved";
+    }
+
+  } catch (e) {
+    alert("Server error");
+  }
+
+  setTimeout(() => {
+    btn.innerText = "💾 Save Scene";
+    btn.disabled = false;
+  }, 1200);
+};
+</script>
+
 </body>
 </html>
