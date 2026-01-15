@@ -1,82 +1,138 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8" />
-  <title>Story → Scene Editor</title>
+<meta charset="UTF-8">
+<title>Story → Scene Editor</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      padding: 20px;
-    }
-    textarea {
-      width: 100%;
-      height: 140px;
-      padding: 10px;
-      font-size: 16px;
-    }
-    button {
-      padding: 8px 16px;
-      margin-top: 10px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .scene {
-      background: #fff;
-      padding: 15px;
-      margin-top: 15px;
-      border-radius: 6px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .scene input {
-      width: 100%;
-      padding: 6px;
-      margin-top: 5px;
-    }
-    .save-btn {
-      background: #2d7ef7;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      margin-top: 8px;
-    }
-    .error {
-      color: red;
-      margin-top: 10px;
-    }
-  </style>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f4f8;
+  padding: 20px;
+}
+
+textarea {
+  width: 100%;
+  height: 130px;
+  font-size: 16px;
+  padding: 10px;
+}
+
+button {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.scene {
+  background: #fff;
+  margin-top: 20px;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.row {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.col {
+  flex: 1;
+}
+
+.label {
+  font-weight: bold;
+  margin: 6px 0 4px;
+}
+
+.preview {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 120px;
+}
+
+.preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.characters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.character {
+  text-align: center;
+  font-size: 12px;
+}
+
+.character img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+input {
+  width: 100%;
+  padding: 6px;
+}
+
+.save-btn {
+  background: #2d7ef7;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.save-btn.saved {
+  background: #2da44e;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+  font-weight: bold;
+}
+</style>
 </head>
 
 <body>
-  <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
 
-  <h1>📖 Story → Scene Editor</h1>
+<h1>📖 Story → Scene Editor</h1>
 
-  <label><strong>গল্প লিখুন:</strong></label>
-  <textarea id="storyText">
-একদিন ভোরবেলায় ছোট্ট নীলা তার জানালার পাশে দাঁড়িয়ে সূর্য উঠতে দেখল।
-হঠাৎ সে দেখল একটি আহত পাখি উঠোনে পড়ে আছে।
-নীলা ধীরে ধীরে পাখিটিকে তুলে এনে পানি ও খাবার দিল।
-কয়েকদিন পর পাখিটি সুস্থ হয়ে আকাশে উড়ে গেল।
-উড়ে যাওয়ার সময় নীলার মনে হলো, ভালোবাসা কখনো হারায় না, তা ফিরে আসে।
-  </textarea>
+<label class="label">গল্প লিখুন</label>
+<textarea id="storyText">
+এক বিকেলের নরম আলোয় ওয়ারিনা নদীর ধারে বসে ছিল।
+হঠাৎ সে দেখল, জলে ভাসছে একটি ছোট কাগজের নৌকা।
+নৌকার ভেতরে লেখা ছিল কারও স্বপ্নের কথা।
+ওয়ারিনা নৌকাটি তুলে আবার জলে ছেড়ে দিল।
+সে ভাবল, স্বপ্নেরও নদী দরকার বয়ে চলার।
+</textarea>
 
-  <br />
-  <button onclick="generateScenes()">🎬 Generate Scenes</button>
+<br><br>
+<button onclick="generateScenes()">🎬 Generate Scenes</button>
 
-  <div id="error" class="error"></div>
-  <div id="scenes"></div>
+<div id="error" class="error"></div>
+<div id="scenes"></div>
 
 <script>
-/* ==============================
+/* ===============================
    Generate Scenes
-============================== */
-window.generateScenes = async function () {
+=============================== */
+async function generateScenes() {
   const story = document.getElementById("storyText").value.trim();
-  const csrfToken = document.getElementById("csrfToken").value;
   const errorBox = document.getElementById("error");
+  const container = document.getElementById("scenes");
+
   errorBox.innerText = "";
+  container.innerHTML = "";
 
   if (!story) {
     errorBox.innerText = "গল্প লেখা ফাঁকা হতে পারে না";
@@ -86,88 +142,113 @@ window.generateScenes = async function () {
   try {
     const res = await fetch("/api/projects/1/generate-scenes/", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrfToken
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ story })
     });
 
     const data = await res.json();
 
-    if (!res.ok) {
-      errorBox.innerText = data.error || "Scene generate failed";
+    if (!Array.isArray(data.scenes)) {
+      errorBox.innerText = "Scene generate হয়নি";
       return;
     }
 
     renderScenes(data.scenes);
 
-  } catch (e) {
-    errorBox.innerText = "Server এ সংযোগ করা যাচ্ছে না";
+  } catch (err) {
+    console.error(err);
+    errorBox.innerText = "Server error";
   }
-};
+}
 
-
-/* ==============================
-   Render Scenes + Save Button
-============================== */
-window.renderScenes = function (scenes) {
+/* ===============================
+   Render Scenes (DEDUP FIX)
+=============================== */
+function renderScenes(scenes) {
   const container = document.getElementById("scenes");
-  container.innerHTML = "";
 
   scenes.forEach((scene, index) => {
     const div = document.createElement("div");
     div.className = "scene";
-    div.dataset.sceneId = scene.id;   // 🔥 REQUIRED
+    div.dataset.sceneId = scene.id;
 
-    const characters = scene.characters?.join(", ") || "";
+    const bg = scene.background;
+    const narration = scene.narration.text;
+
+    // 🔥 HARD DEDUP characters by key
+    const uniqueCharacters = Array.from(
+      new Map(
+        (scene.characters || []).map(c => [c.key, c])
+      ).values()
+    );
 
     div.innerHTML = `
-      <h3>Scene ${index + 1}</h3>
+      <h3>🎬 Scene ${index + 1}</h3>
 
-      <label>Background</label>
-      <input class="bg-input" value="${scene.background || 'bg'}">
+      <div class="row">
+        <div class="col">
+          <div class="label">Background</div>
+          <div class="preview">
+            <img src="/media/${bg.asset}">
+          </div>
+          <input value="${bg.key}">
+        </div>
 
-      <label>Characters</label>
-      <input class="characters-input" value="${characters}">
+        <div class="col">
+          <div class="label">Characters</div>
+          <div class="characters">
+            ${
+              uniqueCharacters.length
+                ? uniqueCharacters.map(c => `
+                    <div class="character">
+                      <img src="/media/${c.asset}">
+                      <div>${c.key}</div>
+                    </div>
+                  `).join("")
+                : "<em>— No character —</em>"
+            }
+          </div>
+        </div>
+      </div>
 
-      <label>Narration</label>
-      <input class="narration-input" value="${scene.narration || ''}">
+      <div class="label">Narration</div>
+      <input value="${narration}">
 
-      <label>Duration</label>
-      <input class="duration-input" type="number" value="${scene.duration || 8}">
+      <div class="label">Duration (sec)</div>
+      <input type="number" value="${scene.duration}">
 
-      <button class="save-btn" onclick="saveScene(this)">
-        💾 Save Scene
-      </button>
+      <button class="save-btn">💾 Save Scene</button>
     `;
 
     container.appendChild(div);
   });
-};
+}
 
-
-/* ==============================
-   Save Single Scene
-============================== */
-window.saveScene = async function (btn) {
+/* ===============================
+   Save Scene
+=============================== */
+async function saveScene(btn) {
   const card = btn.closest(".scene");
   const sceneId = card.dataset.sceneId;
 
-  if (!sceneId) {
-    alert("Scene ID missing");
-    return;
-  }
+  const bgKey = card.querySelector(".bg-input").value;
+  const narrationText = card.querySelector(".narration-input").value;
+  const duration = parseInt(card.querySelector(".duration-input").value) || 8;
 
   const payload = {
     data: {
-      background: card.querySelector(".bg-input").value.trim(),
-      characters: card.querySelector(".characters-input")
-        .value.split(",")
-        .map(c => c.trim())
-        .filter(Boolean),
-      narration: card.querySelector(".narration-input").value.trim(),
-      duration: parseInt(card.querySelector(".duration-input").value) || 8
+      background: {
+        key: bgKey,
+        type: "image",
+        asset: `backgrounds/${bgKey}.jpg`
+      },
+      narration: {
+        text: narrationText,
+        voice: "female_child",
+        lang: "bn"
+      },
+      duration,
+      transition: "fade"
     }
   };
 
@@ -175,32 +256,24 @@ window.saveScene = async function (btn) {
   btn.disabled = true;
 
   try {
-    const res = await fetch(`/api/scenes/${sceneId}/update/`, {
+    await fetch(`/api/scenes/${sceneId}/update/`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": document.getElementById("csrfToken").value
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.error || "Save failed");
-    } else {
-      btn.innerText = "✅ Saved";
-    }
+    btn.innerText = "✅ Saved";
+    btn.classList.add("saved");
 
   } catch (e) {
-    alert("Server error");
+    alert("Save failed");
   }
 
   setTimeout(() => {
     btn.innerText = "💾 Save Scene";
     btn.disabled = false;
   }, 1200);
-};
+}
 </script>
 
 </body>

@@ -1,6 +1,15 @@
 import re
 from pathlib import Path
 from dataclasses import dataclass
+import unicodedata
+
+# =================================================
+# Unicode normalize
+# =================================================
+def u_normalize(text: str) -> str:
+    if not isinstance(text, str):
+        return ""
+    return unicodedata.normalize("NFKC", text)
 
 
 # =================================================
@@ -14,16 +23,16 @@ class KeywordRule:
 
 
 # =================================================
-# Keyword loader
+# Keyword loader (DEDUP SAFE)
 # =================================================
 def load_keywords(file_path):
-    rules = []
+    rules_map = {}
+
     path = Path(file_path)
-
     if not path.exists():
-        return rules
+        return []
 
-    default_priority = 1000
+    priority_counter = 1000
 
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
@@ -33,22 +42,25 @@ def load_keywords(file_path):
                 continue
 
             left, right = line.split("=", 1)
-            key = left.strip()
+            key = u_normalize(left.strip())
 
             if "|" in right:
-                value, pr = right.split("|", 1)
-                value = value.strip()
+                value_part, priority_part = right.split("|", 1)
+                value = value_part.strip()
                 try:
-                    priority = int(pr.strip())
+                    priority = int(priority_part.strip())
                 except ValueError:
-                    priority = default_priority
+                    priority = priority_counter
             else:
                 value = right.strip()
-                priority = default_priority
+                priority = priority_counter
 
-            rules.append(KeywordRule(key, value, priority))
-            default_priority -= 1
+            if key not in rules_map or priority > rules_map[key].priority:
+                rules_map[key] = KeywordRule(key, value, priority)
 
+            priority_counter -= 1
+
+    rules = list(rules_map.values())
     rules.sort(key=lambda r: r.priority, reverse=True)
     return rules
 
@@ -58,10 +70,10 @@ def load_keywords(file_path):
 # =================================================
 BASE_DIR = Path(__file__).resolve().parent
 
-BACKGROUND_KEYWORDS = load_keywords(BASE_DIR / "keywords" / "backgrounds.txt")
 CHARACTER_KEYWORDS = load_keywords(BASE_DIR / "keywords" / "characters.txt")
+BACKGROUND_KEYWORDS = load_keywords(BASE_DIR / "keywords" / "backgrounds.txt")
 
-KNOWN_CHARACTERS = set(r.key for r in CHARACTER_KEYWORDS)
+KNOWN_CHARACTERS = {u_normalize(r.key) for r in CHARACTER_KEYWORDS}
 
 
 # =================================================
@@ -75,9 +87,11 @@ def normalize_text(text):
 
 
 # =================================================
-# Auto-learn (STRICT)
+# Auto-learn (SAFE)
 # =================================================
 def auto_learn_character(name):
+    name = u_normalize(name)
+
     if name in KNOWN_CHARACTERS:
         return
 
@@ -95,6 +109,9 @@ def auto_learn_character(name):
     KNOWN_CHARACTERS.add(name)
 
 
+# =================================================
+# Unknown name detector (STRICT)
+# =================================================
 def detect_unknown_names(text):
     words = text.split()
 
@@ -102,27 +119,30 @@ def detect_unknown_names(text):
         "একদিন", "হঠাৎ", "কখনো", "তখন", "যেন", "আরও",
         "মন", "জীবন", "আনন্দ", "ক্লান্তি", "নীরবতা",
         "শব্দ", "আলো", "ছায়া", "মুহূর্ত", "চারপাশ",
-        "উঠে", "উঠতে", "আছে", "পরে", "আগে"
+        "নরম", "ছোট", "বড়", "ভালো", "মন্দ",
+        "অন্ধকার", "ধীরে"
     }
 
     verbs = ["দেখ", "বস", "দাঁড়", "হাঁট", "বুঝ", "চিন", "কর", "নিল", "দিল"]
 
+    found = []
+
     for w in words:
-        clean = normalize_text(w)
+        clean = u_normalize(normalize_text(w))
 
         if not re.fullmatch(r"[অ-হ]+", clean):
             continue
 
-        if clean in blacklist or clean in KNOWN_CHARACTERS:
+        if clean in KNOWN_CHARACTERS or clean in blacklist:
             continue
 
         if len(clean) < 3 or len(clean) > 6:
             continue
 
         if any(v in text for v in verbs):
-            return [clean]
+            found.append(clean)
 
-    return []
+    return found
 
 
 # =================================================
@@ -132,7 +152,7 @@ PRIMARY_CHARACTER = None
 
 
 # =================================================
-# Detection logic (UPDATED)
+# Background detection
 # =================================================
 def detect_background(text):
     clean = normalize_text(text)
@@ -159,31 +179,43 @@ def detect_background(text):
     }
 
 
+# =================================================
+# Character detection (FINAL & CLEAN)
+# =================================================
 def detect_characters(text):
     global PRIMARY_CHARACTER
 
-    clean = normalize_text(text)
+    text = u_normalize(text)
+    clean = u_normalize(normalize_text(text))
+
+    words = [
+        u_normalize(w.strip("।,!?"))
+        for w in clean.split()
+        if w.strip("।,!?")
+    ]
+
     found = []
 
+    # 1️⃣ Explicit character match
     for rule in CHARACTER_KEYWORDS:
-        if rule.key in clean:
+        if u_normalize(rule.key) in words:
             found.append(rule.value)
 
     if found:
         if PRIMARY_CHARACTER is None:
             PRIMARY_CHARACTER = found[0]
 
-        return [
-            {
-                "key": c,
-                "emotion": "neutral",
-                "position": "center",
-                "asset": f"characters/{c}.png"
-            }
-            for c in set(found)
-        ]
+        unique = list(dict.fromkeys(found))
 
-    if any(p in text for p in ["সে", "তার", "তাকে", "বুঝল"]):
+        return [{
+            "key": c,
+            "emotion": "neutral",
+            "position": "center",
+            "asset": f"characters/{c}.png"
+        } for c in unique]
+
+    # 2️⃣ Pronoun fallback
+    if any(p in text for p in ["সে", "তার", "তাকে", "ভাবল"]):
         if PRIMARY_CHARACTER:
             return [{
                 "key": PRIMARY_CHARACTER,
@@ -195,6 +227,9 @@ def detect_characters(text):
     return []
 
 
+# =================================================
+# Duration + sentence split
+# =================================================
 def calculate_duration(text):
     return max(8, min(20, len(text.split())))
 
@@ -204,7 +239,7 @@ def split_sentences(text):
 
 
 # =================================================
-# MAIN GENERATOR (UPDATED OUTPUT)
+# MAIN GENERATOR (ORDER SAFE)
 # =================================================
 def generate_scenes_from_story(story_text):
     global PRIMARY_CHARACTER
@@ -214,13 +249,17 @@ def generate_scenes_from_story(story_text):
 
     for idx, sentence in enumerate(split_sentences(story_text), start=1):
 
-        for name in detect_unknown_names(sentence):
-            auto_learn_character(name)
+        characters = detect_characters(sentence)
+
+        if not characters:
+            for name in detect_unknown_names(sentence):
+                auto_learn_character(name)
+            characters = detect_characters(sentence)
 
         scenes.append({
             "scene_id": idx,
             "background": detect_background(sentence),
-            "characters": detect_characters(sentence),
+            "characters": characters,
             "narration": {
                 "text": sentence,
                 "voice": "female_child",
