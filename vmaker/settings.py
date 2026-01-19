@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
 
     'rest_framework',
 
@@ -140,6 +141,12 @@ CELERY_TASK_SERIALIZER = 'json'
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 TEMPLATES[0]["DIRS"] = [BASE_DIR / "templates"]
+
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [
+    BASE_DIR / "static"
+]
+
 
 
 

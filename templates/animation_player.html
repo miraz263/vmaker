@@ -1,0 +1,206 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>Scene Animation Player</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 20px;
+    }
+
+    #player {
+      background: #000;
+      border-radius: 10px;
+      display: block;
+      margin: auto;
+    }
+
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button {
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+
+    input[type=range] {
+      width: 300px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2 align="center">🎬 Scene Animation Player</h2>
+
+<canvas id="player" width="960" height="540"></canvas>
+
+<div class="controls">
+  <button id="playBtn">▶ Play</button>
+  <button id="pauseBtn">⏸ Pause</button>
+  <input type="range" id="timeline" min="0" max="100" value="0">
+  <span id="time">0.0s</span>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  /* ===============================
+     STATE
+  =============================== */
+  const canvas = document.getElementById("player");
+  const ctx = canvas.getContext("2d");
+
+  let animationData = null;
+  let playing = false;
+  let startTime = 0;
+  let currentTime = 0;
+  let duration = 0;
+
+  const assets = {};
+  const SCENE_ID = 527; // 🔴 your real scene id
+
+  /* ===============================
+     LOAD SCENE
+  =============================== */
+  async function loadScene() {
+    try {
+      const res = await fetch(`/api/scenes/${SCENE_ID}/animation/`);
+      if (!res.ok) throw new Error("API failed: " + res.status);
+
+      animationData = await res.json();
+      console.log("Animation JSON:", animationData);
+
+      duration = animationData?.timeline?.duration || 8;
+      document.getElementById("timeline").max = duration * 100;
+
+      await preloadAssets();
+      draw(0);
+
+    } catch (err) {
+      console.error("Animation load failed:", err);
+    }
+  }
+
+  /* ===============================
+     ASSET LOADER
+  =============================== */
+  async function preloadAssets() {
+    const tasks = [];
+
+    const bg = animationData?.environment?.background?.asset;
+    if (bg) tasks.push(loadImage(bg));
+
+    (animationData?.characters || []).forEach(c => {
+      if (c.asset) tasks.push(loadImage(c.asset));
+    });
+
+    await Promise.all(tasks);
+  }
+
+  function loadImage(src) {
+    return new Promise(resolve => {
+      if (assets[src]) return resolve();
+
+      const img = new Image();
+      img.src = "/media/" + src;
+
+      img.onload = () => {
+        assets[src] = img;
+        resolve();
+      };
+
+      img.onerror = () => {
+        console.warn("Missing image:", src);
+        resolve();
+      };
+    });
+  }
+
+  /* ===============================
+     CONTROLS
+  =============================== */
+  document.getElementById("playBtn").onclick = () => {
+    if (playing) return;
+    playing = true;
+    startTime = performance.now() - currentTime * 1000;
+    requestAnimationFrame(loop);
+  };
+
+  document.getElementById("pauseBtn").onclick = () => {
+    playing = false;
+  };
+
+  document.getElementById("timeline").addEventListener("input", e => {
+    currentTime = e.target.value / 100;
+    draw(currentTime);
+  });
+
+  /* ===============================
+     LOOP
+  =============================== */
+  function loop(now) {
+    if (!playing) return;
+
+    currentTime = (now - startTime) / 1000;
+    if (currentTime > duration) {
+      playing = false;
+      return;
+    }
+
+    draw(currentTime);
+    requestAnimationFrame(loop);
+  }
+
+  /* ===============================
+     DRAW (SAFE & DEFENSIVE)
+  =============================== */
+  function draw(t) {
+    if (!animationData) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Background
+    const bgAsset = animationData?.environment?.background?.asset;
+    if (bgAsset && assets[bgAsset]) {
+      ctx.drawImage(assets[bgAsset], 0, 0, canvas.width, canvas.height);
+    }
+
+    // Characters
+    (animationData?.characters || []).forEach(char => {
+      const img = assets[char.asset];
+      if (!img) return;
+
+      const pos = char?.initial_state?.position;
+      if (!pos) return;
+
+      const x = canvas.width * (pos.x / 100);
+      const y = canvas.height * (pos.y / 100);
+
+      ctx.drawImage(img, x - 40, y - 80, 80, 80);
+    });
+
+    document.getElementById("timeline").value = t * 100;
+    document.getElementById("time").innerText = t.toFixed(1) + "s";
+  }
+
+  /* ===============================
+     INIT
+  =============================== */
+  loadScene();
+
+});
+</script>
+
+</body>
+</html>

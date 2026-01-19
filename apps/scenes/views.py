@@ -1,6 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+
+from django.shortcuts import render
+
 from django.db import transaction
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -9,6 +12,7 @@ from apps.stories.models import Story
 from apps.scenes.models import Scene
 from apps.ai_engine.services import generate_scenes_from_story
 
+from .animation.generator import generate_scene_animation
 
 @method_decorator(csrf_exempt, name="dispatch")
 class GenerateScenesAPIView(APIView):
@@ -18,11 +22,9 @@ class GenerateScenesAPIView(APIView):
         # 1️⃣ Get story text
         # ===============================
         story_text = request.data.get("story")
+        story_id = None
 
-        if story_text:
-            source = "request"
-            story_id = None
-        else:
+        if not story_text:
             story = (
                 Story.objects
                 .filter(project_id=project_id)
@@ -39,9 +41,11 @@ class GenerateScenesAPIView(APIView):
             story_text = story.text
             story_id = story.id
             source = "database"
+        else:
+            source = "request"
 
         # ===============================
-        # 2️⃣ Generate scenes (AI ENGINE)
+        # 2️⃣ Generate scenes
         # ===============================
         scenes_data = generate_scenes_from_story(story_text)
 
@@ -52,7 +56,7 @@ class GenerateScenesAPIView(APIView):
             )
 
         # ===============================
-        # 3️⃣ Save scenes (🔥 HARD DEDUP HERE)
+        # 3️⃣ Save scenes (DEDUP SAFE)
         # ===============================
         with transaction.atomic():
             Scene.objects.filter(project_id=project_id).delete()
@@ -60,11 +64,13 @@ class GenerateScenesAPIView(APIView):
             saved = []
             for idx, scene in enumerate(scenes_data, start=1):
 
-                # 🔥 FINAL SAFETY: deduplicate characters by key
+                # 🔥 Deduplicate characters
                 characters = scene.get("characters", [])
                 if isinstance(characters, list):
                     scene["characters"] = list({
-                        c.get("key"): c for c in characters if isinstance(c, dict)
+                        c.get("key"): c
+                        for c in characters
+                        if isinstance(c, dict) and c.get("key")
                     }.values())
 
                 obj = Scene.objects.create(
@@ -91,3 +97,41 @@ class GenerateScenesAPIView(APIView):
             },
             status=status.HTTP_201_CREATED
         )
+class SceneAnimationAPIView(APIView):
+    def get(self, request, scene_id):
+        try:
+            scene = Scene.objects.get(id=scene_id)
+        except Scene.DoesNotExist:
+            return Response(
+                {"error": "Scene not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        animation_json = generate_scene_animation(scene)
+        return Response(animation_json)
+
+
+def animation_player_view(request):
+    return render(request, "animation_player.html")
+
+class SceneAnimationAPIView(APIView):
+    def get(self, request, scene_id):
+        try:
+            scene = Scene.objects.get(id=scene_id)
+            animation_json = generate_scene_animation(scene)
+            return Response(animation_json)
+
+        except Scene.DoesNotExist:
+            return Response(
+                {"error": "Scene not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        except Exception as e:
+            return Response(
+                {
+                    "error": "Animation generation failed",
+                    "details": str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
