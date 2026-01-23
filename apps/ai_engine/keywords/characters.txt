@@ -14,6 +14,7 @@
 নাঈম = naim | 100
 শাওন = shawon | 100
 রিফাত = rifat | 100
+রাহিম  = rahim | 100
 
 # === FAMILY (High Priority) ===
 মায়ের = mother | 95

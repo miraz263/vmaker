@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.shortcuts import render
-
 from django.db import transaction
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -11,16 +10,16 @@ from django.utils.decorators import method_decorator
 from apps.stories.models import Story
 from apps.scenes.models import Scene
 from apps.ai_engine.services import generate_scenes_from_story
-
 from .animation.generator import generate_scene_animation
 
+
+# =========================================================
+# Generate Scenes from Story
+# =========================================================
 @method_decorator(csrf_exempt, name="dispatch")
 class GenerateScenesAPIView(APIView):
     def post(self, request, project_id):
 
-        # ===============================
-        # 1️⃣ Get story text
-        # ===============================
         story_text = request.data.get("story")
         story_id = None
 
@@ -31,7 +30,6 @@ class GenerateScenesAPIView(APIView):
                 .order_by("-id")
                 .first()
             )
-
             if not story:
                 return Response(
                     {"error": "No story found"},
@@ -44,9 +42,6 @@ class GenerateScenesAPIView(APIView):
         else:
             source = "request"
 
-        # ===============================
-        # 2️⃣ Generate scenes
-        # ===============================
         scenes_data = generate_scenes_from_story(story_text)
 
         if not isinstance(scenes_data, list):
@@ -55,16 +50,12 @@ class GenerateScenesAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        # ===============================
-        # 3️⃣ Save scenes (DEDUP SAFE)
-        # ===============================
         with transaction.atomic():
             Scene.objects.filter(project_id=project_id).delete()
 
             saved = []
             for idx, scene in enumerate(scenes_data, start=1):
 
-                # 🔥 Deduplicate characters
                 characters = scene.get("characters", [])
                 if isinstance(characters, list):
                     scene["characters"] = list({
@@ -84,9 +75,6 @@ class GenerateScenesAPIView(APIView):
                     **obj.data
                 })
 
-        # ===============================
-        # 4️⃣ Response
-        # ===============================
         return Response(
             {
                 "project_id": project_id,
@@ -97,23 +85,25 @@ class GenerateScenesAPIView(APIView):
             },
             status=status.HTTP_201_CREATED
         )
-class SceneAnimationAPIView(APIView):
-    def get(self, request, scene_id):
-        try:
-            scene = Scene.objects.get(id=scene_id)
-        except Scene.DoesNotExist:
-            return Response(
-                {"error": "Scene not found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        animation_json = generate_scene_animation(scene)
-        return Response(animation_json)
 
 
-def animation_player_view(request):
-    return render(request, "animation_player.html")
+# =========================================================
+# Scene List API  (🔥 REQUIRED)
+# =========================================================
+class SceneListAPIView(APIView):
+    def get(self, request, project_id):
+        scenes = (
+            Scene.objects
+            .filter(project_id=project_id)
+            .order_by("order")
+            .values("id", "order")
+        )
+        return Response(list(scenes), status=status.HTTP_200_OK)
 
+
+# =========================================================
+# Scene Animation API
+# =========================================================
 class SceneAnimationAPIView(APIView):
     def get(self, request, scene_id):
         try:
@@ -135,3 +125,10 @@ class SceneAnimationAPIView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+# =========================================================
+# Animation Player Page
+# =========================================================
+def animation_player_view(request):
+    return render(request, "animation_player.html")
