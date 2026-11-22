@@ -22,6 +22,7 @@ urlpatterns = [
 
     path("api/", include(router.urls)),
     path("", include("apps.scenes.urls")),
+    path("", include("apps.audio.urls")),
 
     path("editor/", scene_editor_view, name="scene_editor"),
 ]

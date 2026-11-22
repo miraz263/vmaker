@@ -1,10 +1,11 @@
 def normalize_scene_for_animation(data: dict) -> dict:
     """
-    Convert DB Scene JSON → Engine-ready Animation JSON
+    Convert DB Scene JSON -> Engine-ready 3D Animation JSON
+    Includes timed visemes for 3D character lip-sync and audio playback.
     """
 
     # ------------------
-    # Background
+    # Background / Environment
     # ------------------
     bg = data.get("background", {})
     background = {
@@ -21,7 +22,6 @@ def normalize_scene_for_animation(data: dict) -> dict:
     for c in data.get("characters", []):
         pos = c.get("position", "center")
 
-        # string → x,y
         x = 50
         if pos == "left":
             x = 30
@@ -33,7 +33,7 @@ def normalize_scene_for_animation(data: dict) -> dict:
             "key": c.get("key"),
             "asset": c.get("asset"),
             "initial_state": {
-                "position": {"x": x, "y": 75},
+                "position": {"x": x, "y": 75, "z": 0},
                 "pose": "idle",
                 "emotion": c.get("emotion", "neutral"),
                 "facing": "right"
@@ -42,16 +42,21 @@ def normalize_scene_for_animation(data: dict) -> dict:
         })
 
     # ------------------
-    # Narration
+    # Narration & 3D Lip-Sync Audio
     # ------------------
     narration = data.get("narration", {})
+    audio_data = data.get("audio", {})
+
     narration_block = {
         "text": narration.get("text", ""),
         "voice": {
             "lang": narration.get("lang", "bn"),
+            "voice_id": audio_data.get("voice", narration.get("voice_id", "bn-BD-NabanitaNeural")),
             "gender": narration.get("voice", "female_child")
         },
-        "start_at": 0.5
+        "audio_url": audio_data.get("url") or narration.get("audio_url", ""),
+        "visemes": audio_data.get("visemes") or narration.get("visemes", []),
+        "start_at": narration.get("start_at", 0.5)
     }
 
     # ------------------
@@ -67,7 +72,8 @@ def normalize_scene_for_animation(data: dict) -> dict:
         },
         "camera": {
             "type": "static",
-            "zoom": 1.0
+            "zoom": 1.0,
+            "position": {"x": 0, "y": 1.5, "z": 4.0}
         },
         "characters": characters,
         "narration": narration_block,
