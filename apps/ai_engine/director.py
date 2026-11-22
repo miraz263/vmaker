@@ -113,17 +113,25 @@ class RuleBased3DDirector:
         shot_cycle = ["wide", "medium", "close_up", "medium"]
 
         # Determine story protagonist
-        story_characters = self.parser.detect_characters(story_text)
-        if not story_characters:
-            for name in self.parser.detect_unknown_names(story_text):
-                self.parser.auto_learn_character(name)
+        if any(w in story_text for w in ["পিকু", "পান্ডা", "জঙ্গল", "বন"]):
+            default_protagonist = {
+                "key": "panda",
+                "name": "পিকু",
+                "asset": "scenes/pixar/panda_scene_1.jpg",
+                "model_3d": "models/characters/panda.glb"
+            }
+        else:
             story_characters = self.parser.detect_characters(story_text)
-        
-        default_protagonist = story_characters[0] if story_characters else {
-            "key": "rahat",
-            "name": "রাহাত",
-            "asset": "characters/rahat.png"
-        }
+            if not story_characters:
+                for name in self.parser.detect_unknown_names(story_text):
+                    self.parser.auto_learn_character(name)
+                story_characters = self.parser.detect_characters(story_text)
+            
+            default_protagonist = story_characters[0] if story_characters else {
+                "key": "rahat",
+                "name": "রাহাত",
+                "asset": "characters/rahat.png"
+            }
         active_characters = [default_protagonist]
 
         for idx, sentence in enumerate(sentences, start=1):

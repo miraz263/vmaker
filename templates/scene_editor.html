@@ -475,28 +475,19 @@ input {
 
     <!-- Video Result Box -->
     <div id="videoResultBox">
-      <h3>🎉 আপনার গল্প প্রসেস সম্পন্ন হয়েছে!</h3>
+      <h3 style="color: #34d399; font-size: 22px; margin-bottom: 12px;">🎉 আপনার ৩ডি পিক্সার কার্টুন অ্যানিমেশন ভিডিও সম্পূর্ণ তৈরি!</h3>
+      <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 16px;">সিনেমাটিক ৩ডি ক্যামেরা মুভমেন্ট, বাংলা ভয়েসওভার ও ব্যাকগ্রাউন্ড মিউজিক সহ ভিডিও রেডি।</p>
       
-      <!-- Primary 3D Animation Call to Action -->
-      <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25)); border: 1px solid rgba(168, 85, 247, 0.5); border-radius: 12px; padding: 18px; margin-bottom: 20px; text-align: center;">
-        <h4 style="color: #c084fc; font-size: 18px; margin-bottom: 8px;">🎬 আসল ৩ডি অ্যানিমেশন ও লিপ-সিঙ্ক দেখতে এখানে যান:</h4>
-        <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 14px;">নিচের প্লেয়ারে আসল ৩ডি ক্যারেক্টার, মুখের নড়াচড়া (Lip-Sync) ও ক্যামেরা মোশন সহ লাইভ অ্যানিমেশন দেখতে ও ভিডিও রেকর্ড করতে পারবেন।</p>
-        <a id="btnOpen3D" class="btn-3d" href="/animation/player/" target="_blank" style="display: inline-block; padding: 12px 28px; font-size: 16px; font-weight: 700; background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
-          🔴 Open in 3D Studio Player (আসল ৩ডি ভিডিও দেখুন ও রেকর্ড করুন)
+      <video id="finalVideoPlayer" controls style="max-width: 100%; width: 720px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); margin-bottom: 16px;"></video>
+      
+      <div class="video-actions" style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+        <a id="btnDownloadVideo" class="btn-download" href="#" download style="padding: 12px 24px; font-size: 15px; font-weight: 700; background: linear-gradient(135deg, #10b981, #059669); color: #fff; text-decoration: none; border-radius: 8px;">
+          ⬇️ Download 3D Animated Video (MP4)
+        </a>
+        <a id="btnOpen3D" class="btn-3d" href="/animation/player/" target="_blank" style="padding: 12px 22px; font-size: 14px; font-weight: 600; background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; text-decoration: none; border-radius: 8px;">
+          🎮 Open in 3D Interactive Player
         </a>
       </div>
-
-      <details style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 12px; text-align: left;">
-        <summary style="cursor: pointer; color: #94a3b8; font-size: 13px; font-weight: 600;">🎞️ ২ডি ইমেজ স্লাইডশো প্রিভিউ দেখুন (2D Slide Preview)</summary>
-        <div style="margin-top: 12px; text-align: center;">
-          <video id="finalVideoPlayer" controls style="max-width: 100%; border-radius: 8px;"></video>
-          <div class="video-actions" style="margin-top: 10px;">
-            <a id="btnDownloadVideo" class="btn-download" href="#" download style="padding: 8px 16px; font-size: 13px;">
-              ⬇️ Download 2D Preview MP4
-            </a>
-          </div>
-        </div>
-      </details>
     </div>
 
     <div id="error" class="error"></div>

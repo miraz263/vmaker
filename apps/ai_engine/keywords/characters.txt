@@ -1,4 +1,8 @@
 # === MAIN CHARACTERS (Highest Priority) ===
+পিকু = piku | 100
+পান্ডা = panda | 100
+রাহাত = rahat | 100
+খরগোশ = rabbit | 100
 রাহুল = rahul | 100
 নীলা = nila | 100
 ওয়ারিনা = warina | 100

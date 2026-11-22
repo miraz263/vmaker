@@ -603,15 +603,41 @@ async function loadScene(idx) {
   sceneDuration = animation.timeline?.duration || 8;
   totalDurationLabel.innerText = formatTime(sceneDuration);
 
-  // Load Background Texture
-  const bgPath = animation.environment?.background?.asset;
-  if (bgPath) {
-    bgTextureLoader.load(`/media/${bgPath}`, (tex) => {
-      bgMesh.material = new THREE.MeshBasicMaterial({ map: tex });
-    }, undefined, () => {
-      bgMesh.material = new THREE.MeshBasicMaterial({ color: 0x1e293b });
-    });
-  }
+  // Load Background Texture (Prioritizes 3D Pixar Scene Render)
+  const pixarScenePath = `scenes/scene_${sceneData.id}_pixar.jpg`;
+  const bgPath = animation.environment?.background?.asset || pixarScenePath;
+
+  const targetBgUrl = `/media/${pixarScenePath}`;
+  bgTextureLoader.load(targetBgUrl, (tex) => {
+    bgMesh.material = new THREE.MeshBasicMaterial({ map: tex });
+    if (currentHumanModel) {
+      scene.remove(currentHumanModel);
+      currentHumanModel = null;
+    }
+  }, undefined, () => {
+    // Fallback to general background
+    if (bgPath) {
+      bgTextureLoader.load(`/media/${bgPath}`, (tex) => {
+        bgMesh.material = new THREE.MeshBasicMaterial({ map: tex });
+      }, undefined, () => {
+        bgMesh.material = new THREE.MeshBasicMaterial({ color: 0x1e293b });
+      });
+    }
+    
+    // Only load 3D character mesh if not an integrated Pixar scene
+    const isPandaOrPixar = (animation.narration?.text || "").includes("পিকু") || (animation.narration?.text || "").includes("পান্ডা");
+    if (!isPandaOrPixar) {
+      const characters = animation.characters || [];
+      let charModel = characters.length > 0 ? (characters[0].model_3d || `models/characters/${characters[0].key}.glb`) : null;
+      if (!charModel) {
+        charModel = "models/characters/rahat.glb";
+      }
+      load3DCharacter(charModel);
+    } else if (currentHumanModel) {
+      scene.remove(currentHumanModel);
+      currentHumanModel = null;
+    }
+  });
 
   // Load Neural Audio Track if present
   const audioUrl = animation.narration?.audio_url;
@@ -620,14 +646,6 @@ async function loadScene(idx) {
   } else {
     audioElement.src = "";
   }
-
-  // Load Custom 3D Character Model (.glb) if available
-  const characters = animation.characters || [];
-  let charModel = characters.length > 0 ? (characters[0].model_3d || `models/characters/${characters[0].key}.glb`) : null;
-  if (!charModel) {
-    charModel = "models/characters/rahat.glb";
-  }
-  load3DCharacter(charModel);
 
   subtitleBox.innerText = animation.narration?.text || "";
 }
