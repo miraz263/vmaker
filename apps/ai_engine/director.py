@@ -268,7 +268,12 @@ def generate_3d_scenes_from_story(story_text: str, style: str = "pixar_3d") -> l
     Main director entrypoint.
     Uses LLM 3D Director when API keys are available, otherwise uses RuleBased3DDirector.
     """
-    scenes = generate_llm_3d_scenes(story_text, style=style)
+    # The LLM director paraphrases the narration, so the voiceover stops matching the
+    # user's story. Scenes come from the story's own sentences unless USE_LLM_DIRECTOR=1;
+    # the LLM is still used for the picture plan in attach_visual_plan().
+    scenes = None
+    if os.getenv("USE_LLM_DIRECTOR") == "1":
+        scenes = generate_llm_3d_scenes(story_text, style=style)
     if not scenes:
         scenes = RuleBased3DDirector().compose_3d_scenes(story_text, style=style)
 

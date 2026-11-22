@@ -16,6 +16,7 @@ import logging
 import os
 import random
 import re
+import unicodedata
 
 import requests
 
@@ -49,6 +50,63 @@ CHARACTER_HINTS = {
     "বানর": "a cute playful little brown monkey",
     "বাঘ": "a cute friendly tiger cub with orange stripes",
     "শিয়াল": "a cute clever little red fox",
+    "শেয়াল": "a cute clever little red fox",
+    # Insects & small creatures
+    "পিঁপড়": "a tiny cute cartoon red ant with big round eyes, six thin legs and two curly antennae",
+    "পিপড়": "a tiny cute cartoon red ant with big round eyes, six thin legs and two curly antennae",
+    "পিপীলিকা": "a tiny cute cartoon red ant with big round eyes, six thin legs and two curly antennae",
+    "মৌমাছি": "a cute chubby cartoon honeybee with yellow and black stripes and shiny wings",
+    "প্রজাপতি": "a cute colorful cartoon butterfly with big patterned wings",
+    "ফড়িং": "a cute green cartoon grasshopper with long legs",
+    "মাকড়সা": "a cute friendly cartoon spider with big eyes",
+    "শামুক": "a cute cartoon snail with a spiral orange shell",
+    "কচ্ছপ": "a cute cartoon green turtle with a patterned shell",
+    "ব্যাঙ": "a cute cartoon green frog with big round eyes",
+    "ইঁদুর": "a cute little grey cartoon mouse with big round ears",
+    "কাঠবিড়ালি": "a cute cartoon squirrel with a fluffy bushy tail",
+    # Birds
+    "কবুতর": "a cute plump cartoon grey-white pigeon with shiny green-purple neck feathers and pink feet",
+    "পায়রা": "a cute plump cartoon grey-white pigeon with shiny green-purple neck feathers and pink feet",
+    "ঘুঘু": "a cute soft brown cartoon dove with a spotted neck",
+    "চড়ুই": "a cute tiny brown cartoon sparrow",
+    "টিয়া": "a cute bright green cartoon parrot with a red beak",
+    "ময়না": "a cute glossy black cartoon myna bird with a yellow beak",
+    "কোকিল": "a cute dark cartoon cuckoo bird with red eyes",
+    "মুরগি": "a cute plump cartoon hen with brown feathers and a red comb",
+    "মোরগ": "a cute proud cartoon rooster with a red comb and colorful tail",
+    "ময়ূর": "a cute cartoon peacock with a big blue-green tail",
+    # More animals
+    "গরু": "a cute cartoon brown-and-white calf",
+    "ছাগল": "a cute little cartoon goat with tiny horns",
+    "ভেড়া": "a cute fluffy white cartoon lamb",
+    "ঘোড়া": "a cute cartoon brown pony with a flowing mane",
+    "সিংহ": "a cute cartoon lion cub with a fluffy golden mane",
+    "ভালুক": "a cute cuddly brown cartoon bear cub",
+    "হরিণ": "a cute cartoon spotted baby deer",
+    "জিরাফ": "a cute cartoon baby giraffe with brown spots",
+    "কুমির": "a cute friendly green cartoon crocodile",
+    "মাছ": "a cute colorful cartoon fish with big eyes",
+    # People & roles from folk tales
+    "কাঠুরে": "a poor but kind South Asian woodcutter man with a short black beard, a faded brown kurta, a lungi and a cloth tied on his head",
+    "কাঠুরিয়া": "a poor but kind South Asian woodcutter man with a short black beard, a faded brown kurta, a lungi and a cloth tied on his head",
+    "দেবদূত": "a glowing kind angel with white feathered wings, a flowing white robe and a soft golden halo",
+    "ফেরেশতা": "a glowing kind angel with white feathered wings, a flowing white robe and a soft golden halo",
+    "জলপরী": "a friendly mermaid with long dark hair and a shimmering blue-green tail",
+    "পরী": "a tiny friendly fairy with sparkling wings and a pastel dress",
+    "রাজকুমারী": "a young princess with long black hair, a pink gown and a small golden tiara",
+    "রাজকুমার": "a young prince with a blue royal tunic and a small golden crown",
+    "রাজা": "a kind old king with a grey beard, a golden crown and a red royal robe",
+    "রানি": "a graceful queen with a golden crown and a purple sari",
+    "রাণী": "a graceful queen with a golden crown and a purple sari",
+    "কৃষক": "a cheerful South Asian farmer with a straw hat, a white vest and a lungi",
+    "চাষি": "a cheerful South Asian farmer with a straw hat, a white vest and a lungi",
+    "জেলে": "a South Asian fisherman with a fishing net, a checked lungi and a towel on his shoulder",
+    "শিকারি": "a hunter with a bow and arrows, a green vest and a cap",
+    "সাধু": "a wise old hermit with a long white beard and saffron robes",
+    "বুড়ি": "a kind old village woman with white hair and a white sari",
+    "বুড়ো": "a kind old village man with a white beard and a walking stick",
+    "ব্যবসায়ী": "a plump merchant with a turban, a fancy vest and a money pouch",
+    "শিক্ষক": "a friendly teacher with glasses, a white shirt and a book in hand",
     "ছেলে": "a cute little South Asian boy with short black hair, blue t-shirt and shorts",
     "মেয়ে": "a cute little South Asian girl with black pigtails and a yellow frock",
     "দাদা": "a kind old grandfather with white hair, glasses and a white kurta",
@@ -89,6 +147,17 @@ TIME_HINTS = {
 }
 
 ACTION_HINTS = {
+    "সোনার কুড়াল": "holding up a shining golden axe",
+    "রুপার কুড়াল": "holding up a shining silver axe",
+    "লোহার কুড়াল": "holding up an old iron axe with a wooden handle",
+    "তিনটি কুড়াল": "giving golden, silver and iron axes as a gift",
+    "কাঠ কাট": "chopping wood with an axe",
+    "পানিতে পড়": "the axe slipping and falling into the river with a splash",
+    "দুঃখ": "looking very sad",
+    "আনন্দ": "smiling with joy",
+    "খুশি": "looking happy",
+    "উপহার": "receiving a gift",
+    "জিজ্ঞেস": "asking a question kindly",
     "ঘুম": "sleeping peacefully, curled up and cozy",
     "হাঁট": "walking happily",
     "দৌড়": "running joyfully",
@@ -127,7 +196,7 @@ def call_llm_json(system_prompt: str, user_prompt: str, timeout: int = 40) -> di
                 "https://api.groq.com/openai/v1/chat/completions",
                 headers={"Authorization": f"Bearer {groq_key}"},
                 json={
-                    "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+                    "model": os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt},
@@ -161,6 +230,33 @@ def call_llm_json(system_prompt: str, user_prompt: str, timeout: int = 40) -> di
         except Exception as e:
             logger.warning(f"Gemini storyboard call failed: {e}")
 
+    # Keyless fallback: Pollinations' free text API (same service that draws the images).
+    # Set POLLINATIONS_TEXT=0 to turn it off.
+    if os.getenv("POLLINATIONS_TEXT", "1") != "0":
+        try:
+            headers = {"Content-Type": "application/json"}
+            if os.getenv("POLLINATIONS_TOKEN"):
+                headers["Authorization"] = f"Bearer {os.getenv('POLLINATIONS_TOKEN')}"
+            res = requests.post(
+                "https://text.pollinations.ai/openai",
+                headers=headers,
+                json={
+                    "model": os.getenv("POLLINATIONS_TEXT_MODEL", "openai"),
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    "response_format": {"type": "json_object"},
+                },
+                timeout=max(timeout, 90),
+            )
+            res.raise_for_status()
+            text = res.json()["choices"][0]["message"]["content"]
+            text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
+            return json.loads(text)
+        except Exception as e:
+            logger.warning(f"Pollinations text storyboard call failed: {e}")
+
     return None
 
 
@@ -185,7 +281,13 @@ Return JSON:
   ]
 }
 Rules:
-- Give every character a distinctive, kid-friendly look and keep it identical across shots.
+- Characters are exactly who the story says: an ant stays an ant, a woodcutter is an adult man,
+  an angel is an adult angel. Never turn a character into a child unless the story says child.
+- Each "look" starts with what the character is (e.g. "a tiny red ant", "an adult South Asian
+  woodcutter man"), then colors, clothes, accessories. Cartoon-cute, but true to the story.
+- Keep each look identical across shots.
+- In "action" refer to characters by an English noun ("the woodcutter", "the ant"), never by
+  Bengali words or Bengali script.
 - Vary shot sizes like a film: open with a wide shot, use close-ups for emotions.
 - Settings must follow the story's continuity (same place stays the same).
 - English only in descriptions. No text or signs in the image."""
@@ -230,7 +332,13 @@ def _llm_storyboard(lines: list[str]) -> dict | None:
 # -------------------------------------------------
 def _match(text: str, table: dict, limit: int) -> list[str]:
     """Matches in the order they appear in the text."""
-    hits = sorted((text.find(key), desc) for key, desc in table.items() if key in text)
+    # য়/ড়/ঢ় can be one code point or base letter + nukta; compare in one form.
+    text = unicodedata.normalize("NFC", text or "")
+    hits = sorted(
+        (text.find(k), desc)
+        for key, desc in table.items()
+        if (k := unicodedata.normalize("NFC", key)) in text
+    )
     seen = []
     for _, desc in hits:
         if desc not in seen:
