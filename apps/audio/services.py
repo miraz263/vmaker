@@ -2,7 +2,10 @@ import os
 import re
 import asyncio
 from pathlib import Path
-from django.conf import settings
+try:
+    from django.conf import settings
+except ImportError:
+    settings = None
 
 BENGALI_VOICES = {
     "bn-BD-NabanitaNeural": {"name": "Nabanita", "gender": "female", "region": "Bangladesh"},
