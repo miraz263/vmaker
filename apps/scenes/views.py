@@ -10,6 +10,7 @@ from django.utils.decorators import method_decorator
 from apps.stories.models import Story
 from apps.scenes.models import Scene
 from apps.ai_engine.services import generate_scenes_from_story
+from apps.ai_engine.director import generate_3d_scenes_from_story
 from .animation.generator import generate_scene_animation
 
 
@@ -42,7 +43,13 @@ class GenerateScenesAPIView(APIView):
         else:
             source = "request"
 
-        scenes_data = generate_scenes_from_story(story_text)
+        mode = request.data.get("mode", "3d")
+        style = request.data.get("style", "pixar_3d")
+
+        if mode == "3d":
+            scenes_data = generate_3d_scenes_from_story(story_text, style=style)
+        else:
+            scenes_data = generate_scenes_from_story(story_text)
 
         if not isinstance(scenes_data, list):
             return Response(

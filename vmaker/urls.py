@@ -24,6 +24,7 @@ urlpatterns = [
     path("", include("apps.scenes.urls")),
     path("", include("apps.audio.urls")),
     path("", include("apps.assets.urls")),
+    path("", include("apps.renderer.urls")),
 
     path("editor/", scene_editor_view, name="scene_editor"),
 ]

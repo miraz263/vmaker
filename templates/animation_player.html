@@ -218,6 +218,7 @@ select {
     <span class="title">vmaker Studio WebGL Player</span>
   </div>
   <div class="btn-group">
+    <button id="exportVideoBtn" style="background: linear-gradient(135deg, #10b981, #059669); border-color: transparent;">⚡ Render 1080p MP4</button>
     <button id="toggleCameraBtn">🎥 Cam: Director Mode</button>
     <a href="/editor/" style="text-decoration:none;"><button>📝 Open Editor</button></a>
   </div>
@@ -616,7 +617,86 @@ window.addEventListener("resize", () => {
   renderer.setSize(w, h);
 });
 
+/* ============================================================
+   6. EXPORT 1080p VIDEO RENDERING
+============================================================ */
+const exportBtn = document.getElementById("exportVideoBtn");
+const renderModal = document.getElementById("renderModal");
+const renderStatusText = document.getElementById("renderStatusText");
+const renderProgressBar = document.getElementById("renderProgressBar");
+const renderActionArea = document.getElementById("renderActionArea");
+const closeRenderModalBtn = document.getElementById("closeRenderModalBtn");
+
+closeRenderModalBtn.onclick = () => { renderModal.style.display = "none"; };
+
+exportBtn.onclick = async () => {
+  renderModal.style.display = "flex";
+  renderProgressBar.style.width = "10%";
+  renderStatusText.innerText = "Submitting render job to worker...";
+  renderActionArea.innerHTML = `<button onclick="document.getElementById('renderModal').style.display='none'" style="background:rgba(255,255,255,0.1); border:none; padding:8px 18px; border-radius:8px; color:#fff; cursor:pointer;">Close</button>`;
+
+  try {
+    const res = await fetch(`/api/projects/${PROJECT_ID}/render/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resolution: "1080p", fps: 24 })
+    }).then(r => r.json());
+
+    if (!res.job_id) {
+      renderStatusText.innerText = "Error: Could not start render job.";
+      return;
+    }
+
+    const pollInterval = setInterval(async () => {
+      const statusRes = await fetch(`/api/render-jobs/${res.job_id}/`).then(r => r.json());
+      const p = statusRes.progress || 0;
+      renderProgressBar.style.width = p + "%";
+
+      if (statusRes.status === "AUDIO_GENERATING") {
+        renderStatusText.innerText = `Generating Voiceover Audio... (${p}%)`;
+      } else if (statusRes.status === "SCENE_COMPILING") {
+        renderStatusText.innerText = `Compiling 3D Visuals & Frames... (${p}%)`;
+      } else if (statusRes.status === "ENCODING") {
+        renderStatusText.innerText = `Encoding 1080p MP4 Video... (${p}%)`;
+      } else if (statusRes.status === "COMPLETED") {
+        clearInterval(pollInterval);
+        renderProgressBar.style.width = "100%";
+        renderStatusText.innerHTML = `<span style="color:#10b981; font-weight:600;">✅ Video Rendering Complete!</span>`;
+        renderActionArea.innerHTML = `
+          <a href="${statusRes.video_url}" download style="text-decoration:none;">
+            <button style="background:linear-gradient(135deg, #10b981, #059669); border:none; padding:10px 20px; border-radius:8px; color:#fff; font-weight:600; cursor:pointer; margin-right:8px;">⬇️ Download MP4</button>
+          </a>
+          <button onclick="document.getElementById('renderModal').style.display='none'" style="background:rgba(255,255,255,0.1); border:none; padding:10px 18px; border-radius:8px; color:#fff; cursor:pointer;">Close</button>
+        `;
+      } else if (statusRes.status === "FAILED") {
+        clearInterval(pollInterval);
+        renderStatusText.innerHTML = `<span style="color:#ef4444;">❌ Rendering Failed: ${statusRes.error_message || "Unknown error"}</span>`;
+      }
+    }, 1500);
+
+  } catch (err) {
+    renderStatusText.innerText = "Error connecting to render engine: " + err;
+  }
+};
+
 });
 </script>
+
+<!-- Render Progress Modal -->
+<div id="renderModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); z-index:100; justify-content:center; align-items:center;">
+  <div style="background:#1e293b; border:1px solid rgba(255,255,255,0.15); border-radius:14px; padding:28px; width:90%; max-width:440px; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+    <h3 style="margin-bottom:12px; font-size:18px;">🎬 Video Rendering Engine</h3>
+    <p id="renderStatusText" style="color:#94a3b8; font-size:14px; margin-bottom:18px;">Initializing task worker...</p>
+    
+    <div style="height:10px; background:rgba(255,255,255,0.1); border-radius:5px; overflow:hidden; margin-bottom:20px;">
+      <div id="renderProgressBar" style="width:5%; height:100%; background:linear-gradient(90deg, #10b981, #38bdf8); transition:width 0.4s ease;"></div>
+    </div>
+    
+    <div id="renderActionArea">
+      <button id="closeRenderModalBtn" style="background:rgba(255,255,255,0.1); border:none; padding:8px 18px; border-radius:8px; color:#fff; cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
