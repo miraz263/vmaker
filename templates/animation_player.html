@@ -17,8 +17,8 @@ body {
   background: #0b0f19;
   color: #f1f5f9;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  overflow-x: hidden;
-  min-height: 100vh;
+  overflow: hidden;
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -32,6 +32,8 @@ header {
   justify-content: space-between;
   align-items: center;
   z-index: 20;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .logo-area { display: flex; align-items: center; gap: 12px; }
@@ -44,25 +46,57 @@ header {
   font-size: 13px;
   letter-spacing: 0.5px;
 }
-.title { font-size: 18px; font-weight: 600; }
+.title { font-weight: 700; font-size: 18px; letter-spacing: -0.3px; }
+
+.btn-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+button {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+button:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-1px); }
+button.primary {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+button.primary:hover { box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5); }
+
+button.record-btn {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  border-color: transparent;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45);
+}
+button.record-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+}
 
 .main-stage {
   flex: 1;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+  flex-direction: column;
+  position: relative;
+  background: #070913;
+  min-height: 0;
+  overflow: hidden;
 }
 
 #viewport-wrap {
   width: 100%;
-  max-width: 1060px;
-  aspect-ratio: 16 / 9;
+  height: 100%;
   position: relative;
-  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
-  background: #000;
 }
 
 #webgl-canvas {
@@ -71,111 +105,78 @@ header {
   display: block;
 }
 
-/* Subtitle & HUD Overlays */
-#subtitle-box {
-  position: absolute;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 85%;
-  max-width: 780px;
-  background: rgba(15, 23, 42, 0.82);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  padding: 12px 24px;
-  text-align: center;
-  font-size: 21px;
-  font-weight: 500;
-  color: #ffffff;
-  line-height: 1.4;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
 .hud-pill {
   position: absolute;
-  top: 16px;
-  padding: 6px 14px;
-  background: rgba(15, 23, 42, 0.7);
+  background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  padding: 6px 14px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 8px;
+  color: #e2e8f0;
+  z-index: 10;
 }
 
-#hud-scene { left: 16px; }
-#hud-viseme {
-  right: 16px;
-  color: #38bdf8;
-  font-family: monospace;
+#hud-scene { top: 20px; left: 24px; }
+#hud-viseme { top: 20px; right: 24px; }
+#hud-recording {
+  top: 60px;
+  left: 24px;
+  background: rgba(220, 38, 38, 0.95);
+  border-color: #fca5a5;
+  color: #fff;
+  display: none;
 }
+
 .pulse-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
   background: #10b981;
+  border-radius: 50%;
   box-shadow: 0 0 10px #10b981;
+  animation: pulse 1.8s infinite;
 }
 
-/* Control Panel */
-.control-bar {
-  max-width: 1060px;
-  margin: 0 auto 28px;
-  width: 100%;
-  padding: 14px 20px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+#subtitle-box {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 12px 28px;
   border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  max-width: 80%;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  line-height: 1.5;
+  z-index: 10;
+}
+
+.control-bar {
+  height: 74px;
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.btn-group { display: flex; align-items: center; gap: 10px; }
-
-button {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
-}
-
-button:hover {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-button.primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border-color: transparent;
-}
-button.primary:hover {
-  filter: brightness(1.15);
-}
-
-select {
-  background: rgba(30, 41, 59, 0.9);
-  color: #f8fafc;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
+  padding: 0 28px;
+  gap: 20px;
+  z-index: 20;
 }
 
 .timeline-progress {
@@ -207,6 +208,16 @@ select {
   color: #94a3b8;
   min-width: 80px;
 }
+
+select {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
 </style>
 </head>
 
@@ -214,11 +225,12 @@ select {
 
 <header>
   <div class="logo-area">
-    <span class="logo-badge">3D ENGINE</span>
-    <span class="title">vmaker Studio WebGL Player</span>
+    <span class="logo-badge">3D ANIMATION</span>
+    <span class="title">vmaker 3D Studio Player</span>
   </div>
   <div class="btn-group">
-    <button id="exportVideoBtn" style="background: linear-gradient(135deg, #10b981, #059669); border-color: transparent;">⚡ Render 1080p MP4</button>
+    <button id="record3DVideoBtn" class="record-btn">🔴 Record 3D Animated Video (ভিডিও রেকর্ড)</button>
+    <button id="exportVideoBtn" style="background: rgba(255,255,255,0.08);">⚡ Render 1080p (MoviePy)</button>
     <button id="toggleCameraBtn">🎥 Cam: Director Mode</button>
     <a href="/editor/" style="text-decoration:none;"><button>📝 Open Editor</button></a>
   </div>
@@ -233,11 +245,26 @@ select {
       <span id="scene-counter">Scene 1 / 1</span>
     </div>
 
+    <div class="hud-pill" id="hud-recording">
+      <div class="pulse-dot" style="background:#fff; box-shadow:0 0 10px #fff;"></div>
+      <span id="recording-status-label">🔴 RECORDING 3D ANIMATION — Scene 1 / 1</span>
+    </div>
+
     <div class="hud-pill" id="hud-viseme">
       <span>LIP-SYNC: </span><b id="active-viseme">IDLE</b>
     </div>
 
     <div id="subtitle-box">...</div>
+
+    <!-- Centered Play / Start Overlay -->
+    <div id="play-overlay" style="position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(7, 9, 19, 0.65); backdrop-filter: blur(4px); z-index: 15; cursor: pointer;">
+      <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.18); border-radius: 20px; padding: 32px 48px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.7); max-width: 90%;">
+        <button id="overlayPlayBtn" style="padding: 16px 36px; font-size: 20px; font-weight: 700; border-radius: 9999px; background: linear-gradient(135deg, #6366f1, #a855f7); border: none; box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6); color: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 10px;">
+          ▶️ ৩ডি অ্যানিমেশন চালু করুন (Play 3D)
+        </button>
+        <p style="margin-top: 14px; color: #94a3b8; font-size: 13px;">ক্লিক করলে ৩ডি ক্যারেক্টার ও ভয়েসওভার লাইভ শুরু হবে</p>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -261,7 +288,43 @@ select {
   </div>
 </div>
 
-<audio id="sceneAudio" preload="auto"></audio>
+<audio id="sceneAudio" preload="auto" crossorigin="anonymous"></audio>
+
+<!-- 3D Recording Result Modal -->
+<div id="recordedModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:200; justify-content:center; align-items:center;">
+  <div style="background:#1e293b; border:1px solid rgba(255,255,255,0.2); border-radius:16px; padding:28px; width:92%; max-width:680px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.6);">
+    <h3 style="color:#34d399; font-size:22px; margin-bottom:8px;">🎉 3D Animated Video Ready!</h3>
+    <p style="color:#cbd5e1; font-size:14px; margin-bottom:18px;">লাইভ ৩ডি চরিত্র, নড়াচড়া, মুখের লিপ-সিঙ্ক ও ক্যামেরা মুভমেন্ট সহ আসল অ্যানিমেশন ভিডিও তৈরি হয়েছে।</p>
+    
+    <video id="recordedVideoPreview" controls style="max-width:100%; width:600px; max-height:360px; border-radius:10px; background:#000; margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.5);"></video>
+    
+    <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+      <a id="btnDownloadRecordedMP4" href="#" download="story_3d_animation.mp4" style="text-decoration:none;">
+        <button style="background:linear-gradient(135deg, #10b981, #059669); border:none; padding:12px 24px; border-radius:8px; color:#fff; font-weight:700; cursor:pointer;">⬇️ Download MP4 Video</button>
+      </a>
+      <a id="btnDownloadRecordedWebM" href="#" download="story_3d_animation.webm" style="text-decoration:none;">
+        <button style="background:#3b82f6; border:none; padding:12px 20px; border-radius:8px; color:#fff; font-weight:600; cursor:pointer;">⬇️ Download WebM</button>
+      </a>
+      <button onclick="document.getElementById('recordedModal').style.display='none'" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); padding:12px 20px; border-radius:8px; color:#fff; cursor:pointer;">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Render Progress Modal (MoviePy legacy) -->
+<div id="renderModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); z-index:100; justify-content:center; align-items:center;">
+  <div style="background:#1e293b; border:1px solid rgba(255,255,255,0.15); border-radius:14px; padding:28px; width:90%; max-width:440px; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+    <h3 style="margin-bottom:12px; font-size:18px;">🎬 Video Rendering Engine</h3>
+    <p id="renderStatusText" style="color:#94a3b8; font-size:14px; margin-bottom:18px;">Initializing task worker...</p>
+    
+    <div style="height:10px; background:rgba(255,255,255,0.1); border-radius:5px; overflow:hidden; margin-bottom:20px;">
+      <div id="renderProgressBar" style="width:5%; height:100%; background:linear-gradient(90deg, #10b981, #38bdf8); transition:width 0.4s ease;"></div>
+    </div>
+    
+    <div id="renderActionArea">
+      <button id="closeRenderModalBtn" style="background:rgba(255,255,255,0.1); border:none; padding:8px 18px; border-radius:8px; color:#fff; cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
@@ -276,26 +339,45 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0e1726);
 scene.fog = new THREE.FogExp2(0x0e1726, 0.04);
 
-const camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 0.1, 100);
-camera.position.set(0, 1.6, 4.2);
+const initialWidth = wrap.clientWidth > 0 ? wrap.clientWidth : (window.innerWidth || 1280);
+const initialHeight = wrap.clientHeight > 0 ? wrap.clientHeight : (window.innerHeight - 150 || 720);
 
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-renderer.setSize(wrap.clientWidth, wrap.clientHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const camera = new THREE.PerspectiveCamera(45, initialWidth / initialHeight, 0.1, 100);
+camera.position.set(0, 1.55, 3.4);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance", preserveDrawingBuffer: true });
+renderer.setSize(initialWidth, initialHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+if (THREE.sRGBEncoding) {
+  renderer.outputEncoding = THREE.sRGBEncoding;
+}
+
+function resizeRenderer() {
+  const w = wrap.clientWidth > 0 ? wrap.clientWidth : window.innerWidth;
+  const h = wrap.clientHeight > 0 ? wrap.clientHeight : (window.innerHeight - 150);
+  if (w > 0 && h > 0) {
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  }
+}
+window.addEventListener("resize", resizeRenderer);
+setTimeout(resizeRenderer, 150);
+setTimeout(resizeRenderer, 600);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
-controls.target.set(0, 1.2, 0);
+controls.target.set(0, 1.35, 0);
 controls.enabled = false; // Director mode by default
 
 // Lighting Setup
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
 scene.add(ambientLight);
 
-const sunLight = new THREE.DirectionalLight(0xfffaed, 1.1);
+const sunLight = new THREE.DirectionalLight(0xfffaed, 1.2);
 sunLight.position.set(4, 8, 4);
 sunLight.castShadow = true;
 sunLight.shadow.mapSize.width = 1024;
@@ -303,9 +385,13 @@ sunLight.shadow.mapSize.height = 1024;
 sunLight.shadow.bias = -0.001;
 scene.add(sunLight);
 
-const fillLight = new THREE.DirectionalLight(0x90caf9, 0.4);
+const fillLight = new THREE.DirectionalLight(0x90caf9, 0.5);
 fillLight.position.set(-4, 3, -2);
 scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xfef08a, 0.6);
+rimLight.position.set(0, 5, -4);
+scene.add(rimLight);
 
 // Ground Stage
 const groundGeo = new THREE.CircleGeometry(12, 64);
@@ -319,104 +405,159 @@ ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
 
-// Environment Backdrop Billboard
-const bgPlaneGeo = new THREE.PlaneGeometry(16, 9);
+// Environment Backdrop Billboard (Expanded 16:9 Cinema Canvas)
+const bgPlaneGeo = new THREE.PlaneGeometry(24, 13.5);
 const bgTextureLoader = new THREE.TextureLoader();
 let bgMaterial = new THREE.MeshBasicMaterial({ color: 0x111827 });
 const bgMesh = new THREE.Mesh(bgPlaneGeo, bgMaterial);
-bgMesh.position.set(0, 4.2, -5.5);
+bgMesh.position.set(0, 5.0, -7.0);
 scene.add(bgMesh);
 
 /* ============================================================
-   2. PROCEDURAL 3D CHARACTER AVATAR WITH LIP-SYNC BLENDSHAPES
+   2. REALISTIC 3D HUMAN CHARACTER & SKELETAL ANIMATION ENGINE
 ============================================================ */
-class CharacterAvatar3D {
-  constructor(name = "Avatar") {
-    this.name = name;
-    this.root = new THREE.Group();
-    this.root.castShadow = true;
+const gltfLoader = new THREE.GLTFLoader();
+let currentHumanModel = null;
+let currentHumanMeshMap = {};
+let currentBoneMap = {};
+let animationMixer = null;
+let activeCharacterPath = null;
+let characterActions = {};
+let globalHumanoidClips = {};
 
-    // Body / Torso
-    const torsoMat = new THREE.MeshStandardMaterial({ color: 0x6366f1, roughness: 0.5 });
-    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.22, 0.7, 16), torsoMat);
-    torso.position.y = 0.85;
-    torso.castShadow = true;
-    this.root.add(torso);
-
-    // Head
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xfbd38d, roughness: 0.4 });
-    this.head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 24, 24), headMat);
-    this.head.position.y = 1.45;
-    this.head.castShadow = true;
-    this.root.add(this.head);
-
-    // Eyes
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111827 });
-    const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), eyeMat);
-    leftEye.position.set(-0.08, 0.04, 0.22);
-    this.head.add(leftEye);
-
-    const rightEye = leftEye.clone();
-    rightEye.position.x = 0.08;
-    this.head.add(rightEye);
-
-    // Stylized Cap / Hair
-    const capMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.6 });
-    const cap = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.22, 16), capMat);
-    cap.position.set(0, 0.2, -0.02);
-    cap.rotation.x = -0.15;
-    this.head.add(cap);
-
-    // Articulated Mouth (Lip-sync Target)
-    const mouthMat = new THREE.MeshBasicMaterial({ color: 0x881337 });
-    this.mouth = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.025, 0.02), mouthMat);
-    this.mouth.position.set(0, -0.1, 0.23);
-    this.head.add(this.mouth);
-
-    // Shadow blob
-    const blobGeo = new THREE.CircleGeometry(0.35, 16);
-    const blobMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35 });
-    const shadowBlob = new THREE.Mesh(blobGeo, blobMat);
-    shadowBlob.rotation.x = -Math.PI / 2;
-    shadowBlob.position.y = 0.01;
-    this.root.add(shadowBlob);
-
-    this.baseY = 0;
-  }
-
-  updateViseme(blendshapes, delta) {
-    if (!blendshapes) {
-      this.mouth.scale.set(1, 1, 1);
-      return;
+// Load humanoid animation library (Idle, Talking Gestures, Walk, etc.)
+gltfLoader.load('/media/models/animations/humanoid_anims.glb', (animGltf) => {
+  if (animGltf.animations && animGltf.animations.length > 0) {
+    animGltf.animations.forEach(clip => {
+      globalHumanoidClips[clip.name] = clip;
+    });
+    if (currentHumanModel) {
+      applyHumanoidAnimations(currentHumanModel);
     }
-
-    const jawOpen = blendshapes.jawOpen || 0.0;
-    const mouthSmile = blendshapes.mouthSmile || 0.0;
-    const mouthPucker = blendshapes.mouthPucker || 0.0;
-
-    // Dynamically deform mouth mesh according to viseme blendshapes
-    const targetScaleY = 1.0 + (jawOpen * 4.5);
-    const targetScaleX = 1.0 + (mouthSmile * 1.5) - (mouthPucker * 0.4);
-
-    this.mouth.scale.y += (targetScaleY - this.mouth.scale.y) * 0.35;
-    this.mouth.scale.x += (targetScaleX - this.mouth.scale.x) * 0.35;
   }
+}, undefined, (err) => {
+  console.warn("Could not load humanoid animations library:", err);
+});
 
-  animateIdle(time) {
-    // Gentle breathing & bobbing
-    this.root.position.y = this.baseY + Math.sin(time * 2.5) * 0.02;
-    this.head.rotation.y = Math.sin(time * 0.8) * 0.08;
-    this.head.rotation.z = Math.cos(time * 1.2) * 0.03;
+function retargetClip(clip, model) {
+  const tracks = [];
+  clip.tracks.forEach(track => {
+    let cleanName = track.name.replace(/^mixamorig:/, '').replace(/^mixamorig\./, '');
+    const isRotation = cleanName.endsWith('.quaternion');
+    const isHipsPosition = cleanName.includes('Hips') && cleanName.endsWith('.position');
+
+    if (isRotation) {
+      const cloned = track.clone();
+      cloned.name = cleanName;
+      tracks.push(cloned);
+    } else if (isHipsPosition) {
+      const cloned = track.clone();
+      cloned.name = cleanName;
+      for (let i = 0; i < cloned.values.length; i += 3) {
+        cloned.values[i] *= 0.01;     // Scale cm to m
+        cloned.values[i + 1] *= 0.01;
+        cloned.values[i + 2] *= 0.01;
+      }
+      tracks.push(cloned);
+    }
+  });
+  return new THREE.AnimationClip(clip.name, clip.duration, tracks);
+}
+
+function applyHumanoidAnimations(model) {
+  if (!model) return;
+  animationMixer = new THREE.AnimationMixer(model);
+  characterActions = {};
+
+  Object.keys(globalHumanoidClips).forEach(clipName => {
+    const rawClip = globalHumanoidClips[clipName];
+    const retargeted = retargetClip(rawClip, model);
+    const action = animationMixer.clipAction(retargeted);
+    characterActions[clipName] = action;
+  });
+
+  // Start with natural idle breathing and posture immediately
+  if (characterActions["idle"]) {
+    characterActions["idle"].play();
   }
 }
 
-const mainAvatar = new CharacterAvatar3D("Warina");
-scene.add(mainAvatar.root);
+function load3DCharacter(modelRelPath) {
+  let targetPath = modelRelPath;
+  if (!targetPath || targetPath === "null" || targetPath === "undefined") {
+    targetPath = "models/characters/warina.glb";
+  }
+  const cleanPath = targetPath.startsWith("/") ? targetPath : `/media/${targetPath}`;
+
+  if (activeCharacterPath === cleanPath && currentHumanModel) {
+    return;
+  }
+  activeCharacterPath = cleanPath;
+
+  gltfLoader.load(cleanPath, (gltf) => {
+    if (currentHumanModel) {
+      scene.remove(currentHumanModel);
+    }
+    currentHumanModel = gltf.scene;
+    currentHumanModel.position.set(0, 0, 0);
+    currentHumanModel.scale.set(1.0, 1.0, 1.0);
+
+    currentHumanMeshMap = {};
+    currentBoneMap = {};
+
+    currentHumanModel.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        if (child.name) {
+          currentHumanMeshMap[child.name] = child;
+        }
+      }
+      if (child.isBone || child.type === "Bone" || child.name) {
+        currentBoneMap[child.name] = child;
+      }
+    });
+
+    // Procedural Fallback Pose (relaxes arms from T-pose immediately)
+    if (currentBoneMap["LeftArm"]) {
+      currentBoneMap["LeftArm"].quaternion.setFromEuler(new THREE.Euler(0.2, 0, -1.25));
+    }
+    if (currentBoneMap["RightArm"]) {
+      currentBoneMap["RightArm"].quaternion.setFromEuler(new THREE.Euler(0.2, 0, 1.25));
+    }
+    if (currentBoneMap["LeftForeArm"]) {
+      currentBoneMap["LeftForeArm"].quaternion.setFromEuler(new THREE.Euler(0, -0.25, 0));
+    }
+    if (currentBoneMap["RightForeArm"]) {
+      currentBoneMap["RightForeArm"].quaternion.setFromEuler(new THREE.Euler(0, 0.25, 0));
+    }
+
+    scene.add(currentHumanModel);
+
+    // Apply animation clips
+    if (Object.keys(globalHumanoidClips).length > 0) {
+      applyHumanoidAnimations(currentHumanModel);
+    } else if (gltf.animations && gltf.animations.length > 0) {
+      animationMixer = new THREE.AnimationMixer(currentHumanModel);
+      animationMixer.clipAction(gltf.animations[0]).play();
+    }
+  }, undefined, (err) => {
+    console.warn("Could not load 3D character:", cleanPath, err);
+    if (cleanPath !== "/media/models/characters/warina.glb") {
+      load3DCharacter("models/characters/warina.glb");
+    }
+  });
+}
+
+// Load default 3D Human character immediately
+load3DCharacter("models/characters/warina.glb");
 
 /* ============================================================
    3. AUDIO, SCENES & TIMELINE STATE
 ============================================================ */
-const PROJECT_ID = 1;
+const urlParams = new URLSearchParams(window.location.search);
+const PROJECT_ID = parseInt(urlParams.get("project")) || 1;
+
 let scenes = [];
 let sceneIndex = 0;
 let animation = null;
@@ -480,6 +621,14 @@ async function loadScene(idx) {
     audioElement.src = "";
   }
 
+  // Load Custom 3D Character Model (.glb) if available
+  const characters = animation.characters || [];
+  let charModel = characters.length > 0 ? (characters[0].model_3d || `models/characters/${characters[0].key}.glb`) : null;
+  if (!charModel) {
+    charModel = "models/characters/rahat.glb";
+  }
+  load3DCharacter(charModel);
+
   subtitleBox.innerText = animation.narration?.text || "";
 }
 
@@ -496,11 +645,14 @@ const playBtn = document.getElementById("playBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const replayBtn = document.getElementById("replayBtn");
 const toggleCameraBtn = document.getElementById("toggleCameraBtn");
+const playOverlay = document.getElementById("play-overlay");
+const overlayPlayBtn = document.getElementById("overlayPlayBtn");
 
 playBtn.onclick = () => {
   if (isPlaying) return;
   isPlaying = true;
   sceneStartTime = performance.now();
+  if (playOverlay) playOverlay.style.display = "none";
 
   if (audioElement.src && audioElement.src !== window.location.href) {
     audioElement.currentTime = 0;
@@ -511,7 +663,26 @@ playBtn.onclick = () => {
 pauseBtn.onclick = () => {
   isPlaying = false;
   if (!audioElement.paused) audioElement.pause();
+  if (playOverlay) {
+    playOverlay.style.display = "flex";
+    if (overlayPlayBtn) overlayPlayBtn.innerHTML = "▶️ চালু রাখুন (Resume)";
+  }
 };
+
+if (playOverlay) {
+  playOverlay.onclick = (e) => {
+    playBtn.click();
+  };
+}
+
+// Spacebar play/pause shortcut
+window.addEventListener("keydown", (e) => {
+  if (e.code === "Space" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+    e.preventDefault();
+    if (isPlaying) pauseBtn.click();
+    else playBtn.click();
+  }
+});
 
 replayBtn.onclick = () => {
   isPlaying = false;
@@ -536,7 +707,7 @@ toggleCameraBtn.onclick = () => {
 };
 
 /* ============================================================
-   5. REAL-TIME RENDER LOOP & LIP-SYNC SOLVER
+   5. REAL-TIME RENDER LOOP & 3D ANIMATION ENGINE
 ============================================================ */
 let clock = new THREE.Clock();
 
@@ -547,12 +718,32 @@ function animate() {
   const elapsedTime = clock.getElapsedTime();
 
   let t = 0;
+  let isSpeaking = false;
+
   if (isPlaying) {
     t = (performance.now() - sceneStartTime) / 1000;
 
-    // Check if audio has elapsed or timeline finished
+    // Check if current scene has finished
     if (t >= sceneDuration) {
       isPlaying = false;
+
+      // If recording in progress
+      if (isRecordingAll) {
+        if (sceneIndex + 1 < scenes.length) {
+          const nextIdx = sceneIndex + 1;
+          loadScene(nextIdx).then(() => {
+            updateRecordingHUD();
+            playBtn.click();
+          });
+          return;
+        } else {
+          // Completed all scenes! Stop recorder
+          stop3DRecording();
+          return;
+        }
+      }
+
+      // Normal playback loop
       if (scenes.length > 0) {
         const nextIdx = (sceneIndex + 1) % scenes.length;
         loadScene(nextIdx).then(() => {
@@ -568,31 +759,76 @@ function animate() {
     currentTimeLabel.innerText = formatTime(t);
   }
 
-  // 1. Solve 3D Lip-Sync from Viseme Timeline
-  let currentBlendshapes = null;
+  // 1. Solve Real 3D Lip-Sync on Human Model Morph Targets
+  let jawOpen = 0.0;
+  let mouthSmile = 0.0;
   let activeVisemeName = "IDLE";
 
   const visemes = animation?.narration?.visemes || [];
   if (isPlaying && visemes.length > 0) {
-    // Find active viseme at current playback time
     const active = visemes.find(v => t >= v.time && t < (v.time + v.duration));
     if (active) {
-      currentBlendshapes = active.blendshapes;
+      if (active.blendshapes) {
+        jawOpen = active.blendshapes.jawOpen || 0.0;
+        mouthSmile = active.blendshapes.mouthSmile || 0.0;
+      }
       activeVisemeName = active.viseme.replace("viseme_", "").toUpperCase();
+      isSpeaking = true;
     }
   }
 
   activeVisemeLabel.innerText = isPlaying ? activeVisemeName : "IDLE";
-  mainAvatar.updateViseme(currentBlendshapes, delta);
-  mainAvatar.animateIdle(elapsedTime);
 
-  // 2. Cinematic Camera Smooth Motion in Director Mode
+  // Apply blendshapes to Ready Player Me face mesh morph targets
+  const targetMeshes = ["Wolf3D_Head", "Wolf3D_Teeth", "Wolf3D_Beard"];
+  targetMeshes.forEach(meshName => {
+    const mesh = currentHumanMeshMap[meshName];
+    if (mesh && mesh.morphTargetDictionary && mesh.morphTargetInfluences) {
+      const openIdx = mesh.morphTargetDictionary["mouthOpen"];
+      if (openIdx !== undefined) {
+        mesh.morphTargetInfluences[openIdx] += (jawOpen - mesh.morphTargetInfluences[openIdx]) * 0.45;
+      }
+      const smileIdx = mesh.morphTargetDictionary["mouthSmile"];
+      if (smileIdx !== undefined) {
+        mesh.morphTargetInfluences[smileIdx] += (mouthSmile - mesh.morphTargetInfluences[smileIdx]) * 0.35;
+      }
+    }
+  });
+
+  // 2. Full Body Skeletal Animation & Natural Human Motion
+  if (animationMixer) {
+    animationMixer.update(delta);
+
+    if (characterActions["agree"] && characterActions["idle"]) {
+      if (isSpeaking) {
+        if (!characterActions["agree"].isRunning()) {
+          characterActions["idle"].fadeOut(0.35);
+          characterActions["agree"].reset().fadeIn(0.35).play();
+        }
+      } else {
+        if (!characterActions["idle"].isRunning()) {
+          characterActions["agree"].fadeOut(0.45);
+          characterActions["idle"].reset().fadeIn(0.45).play();
+        }
+      }
+    }
+  } else if (currentHumanModel) {
+    // Procedural fallback idle motion
+    currentHumanModel.position.y = Math.sin(elapsedTime * 2.2) * 0.012;
+    const headBone = currentBoneMap["Head"] || currentBoneMap["Neck"];
+    if (headBone) {
+      headBone.rotation.y = Math.sin(elapsedTime * 1.5) * 0.08;
+      headBone.rotation.x = Math.sin(elapsedTime * 2.0) * 0.04;
+    }
+  }
+
+  // 3. Cinematic Camera Smooth Motion in Director Mode
   if (directorMode) {
-    const camAngle = Math.sin(elapsedTime * 0.25) * 0.35;
-    camera.position.x = Math.sin(camAngle) * 4.2;
-    camera.position.z = Math.cos(camAngle) * 4.2;
-    camera.position.y = 1.5 + Math.sin(elapsedTime * 0.4) * 0.12;
-    camera.lookAt(0, 1.25, 0);
+    const camAngle = Math.sin(elapsedTime * 0.2) * 0.28;
+    camera.position.x = Math.sin(camAngle) * 3.4;
+    camera.position.z = Math.cos(camAngle) * 3.4;
+    camera.position.y = 1.55 + Math.sin(elapsedTime * 0.35) * 0.08;
+    camera.lookAt(0, 1.35, 0);
   } else {
     controls.update();
   }
@@ -609,16 +845,152 @@ function formatTime(sec) {
 }
 
 // Window resize handler
-window.addEventListener("resize", () => {
-  const w = wrap.clientWidth;
-  const h = wrap.clientHeight;
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-  renderer.setSize(w, h);
-});
+window.addEventListener("resize", resizeRenderer);
 
 /* ============================================================
-   6. EXPORT 1080p VIDEO RENDERING
+   6. LIVE 3D CANVAS RECORDER (TRUE ANIMATION EXPORT)
+============================================================ */
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecordingAll = false;
+let audioContext = null;
+let audioSourceNode = null;
+let audioDestNode = null;
+
+const recordBtn = document.getElementById("record3DVideoBtn");
+const hudRecording = document.getElementById("hud-recording");
+const recordingStatusLabel = document.getElementById("recording-status-label");
+const recordedModal = document.getElementById("recordedModal");
+const recordedVideoPreview = document.getElementById("recordedVideoPreview");
+const btnDownloadRecordedMP4 = document.getElementById("btnDownloadRecordedMP4");
+const btnDownloadRecordedWebM = document.getElementById("btnDownloadRecordedWebM");
+
+function getAudioStream() {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    try {
+      audioSourceNode = audioContext.createMediaElementSource(audioElement);
+      audioDestNode = audioContext.createMediaStreamDestination();
+      audioSourceNode.connect(audioDestNode);
+      audioSourceNode.connect(audioContext.destination);
+    } catch (e) {
+      console.warn("Could not connect audio stream to recorder:", e);
+    }
+  }
+  if (audioContext && audioContext.state === "suspended") {
+    audioContext.resume();
+  }
+  return audioDestNode ? audioDestNode.stream : new MediaStream();
+}
+
+function updateRecordingHUD() {
+  recordingStatusLabel.innerText = `🔴 RECORDING 3D ANIMATION — Scene ${sceneIndex + 1} / ${scenes.length}`;
+}
+
+async function start3DRecording() {
+  if (scenes.length === 0) {
+    alert("No scenes found to record!");
+    return;
+  }
+
+  recordedChunks = [];
+  isRecordingAll = true;
+  recordBtn.innerText = "⏹️ Stop Recording";
+  recordBtn.style.background = "#475569";
+  hudRecording.style.display = "flex";
+
+  // 1. Capture 60 FPS video stream from WebGL canvas
+  const canvasStream = canvas.captureStream(60);
+  const audioStream = getAudioStream();
+
+  const combinedStream = new MediaStream([
+    ...canvasStream.getVideoTracks(),
+    ...audioStream.getAudioTracks()
+  ]);
+
+  let mimeType = "video/webm;codecs=vp9,opus";
+  if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = "video/webm;codecs=vp8,opus";
+  if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = "video/webm";
+  if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = "video/mp4";
+
+  mediaRecorder = new MediaRecorder(combinedStream, {
+    mimeType: mimeType,
+    videoBitsPerSecond: 8000000 // 8 Mbps high quality
+  });
+
+  mediaRecorder.ondataavailable = (e) => {
+    if (e.data && e.data.size > 0) {
+      recordedChunks.push(e.data);
+    }
+  };
+
+  mediaRecorder.onstop = async () => {
+    const rawBlob = new Blob(recordedChunks, { type: mimeType });
+    const webmUrl = URL.createObjectURL(rawBlob);
+
+    // Show preview modal immediately
+    recordedVideoPreview.src = webmUrl;
+    btnDownloadRecordedWebM.href = webmUrl;
+    btnDownloadRecordedWebM.setAttribute("download", `story_3d_animated_${PROJECT_ID}.webm`);
+    
+    // Set default MP4 download button (converts in background)
+    btnDownloadRecordedMP4.href = webmUrl;
+    btnDownloadRecordedMP4.querySelector("button").innerText = "⏳ Converting to MP4...";
+    recordedModal.style.display = "flex";
+
+    // Auto-convert to H.264 MP4 on backend
+    try {
+      const formData = new FormData();
+      formData.append("video", rawBlob, "recorded_animation.webm");
+      formData.append("project_id", PROJECT_ID);
+
+      const convRes = await fetch("/api/save-3d-video/", {
+        method: "POST",
+        body: formData
+      }).then(r => r.json());
+
+      if (convRes && convRes.video_url) {
+        btnDownloadRecordedMP4.href = convRes.video_url;
+        btnDownloadRecordedMP4.setAttribute("download", convRes.filename || `story_3d_animated_${PROJECT_ID}.mp4`);
+        btnDownloadRecordedMP4.querySelector("button").innerText = "⬇️ Download 3D Animated MP4";
+      }
+    } catch (err) {
+      console.warn("Backend MP4 conversion error:", err);
+      btnDownloadRecordedMP4.querySelector("button").innerText = "⬇️ Download WebM Video";
+    }
+  };
+
+  // Start from Scene 0
+  await loadScene(0);
+  updateRecordingHUD();
+  mediaRecorder.start(200);
+
+  // Trigger Play
+  setTimeout(() => {
+    playBtn.click();
+  }, 200);
+}
+
+function stop3DRecording() {
+  if (mediaRecorder && mediaRecorder.state !== "inactive") {
+    mediaRecorder.stop();
+  }
+  isRecordingAll = false;
+  hudRecording.style.display = "none";
+  recordBtn.innerText = "🔴 Record 3D Animated Video (ভিডিও রেকর্ড)";
+  recordBtn.style.background = "linear-gradient(135deg, #ef4444, #b91c1c)";
+}
+
+recordBtn.onclick = () => {
+  if (isRecordingAll) {
+    stop3DRecording();
+  } else {
+    start3DRecording();
+  }
+};
+
+/* ============================================================
+   7. EXPORT 1080p VIDEO RENDERING (MOVIEPY LEGACY)
 ============================================================ */
 const exportBtn = document.getElementById("exportVideoBtn");
 const renderModal = document.getElementById("renderModal");
@@ -681,22 +1053,6 @@ exportBtn.onclick = async () => {
 
 });
 </script>
-
-<!-- Render Progress Modal -->
-<div id="renderModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); z-index:100; justify-content:center; align-items:center;">
-  <div style="background:#1e293b; border:1px solid rgba(255,255,255,0.15); border-radius:14px; padding:28px; width:90%; max-width:440px; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
-    <h3 style="margin-bottom:12px; font-size:18px;">🎬 Video Rendering Engine</h3>
-    <p id="renderStatusText" style="color:#94a3b8; font-size:14px; margin-bottom:18px;">Initializing task worker...</p>
-    
-    <div style="height:10px; background:rgba(255,255,255,0.1); border-radius:5px; overflow:hidden; margin-bottom:20px;">
-      <div id="renderProgressBar" style="width:5%; height:100%; background:linear-gradient(90deg, #10b981, #38bdf8); transition:width 0.4s ease;"></div>
-    </div>
-    
-    <div id="renderActionArea">
-      <button id="closeRenderModalBtn" style="background:rgba(255,255,255,0.1); border:none; padding:8px 18px; border-radius:8px; color:#fff; cursor:pointer;">Cancel</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>

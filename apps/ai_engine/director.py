@@ -112,12 +112,31 @@ class RuleBased3DDirector:
 
         shot_cycle = ["wide", "medium", "close_up", "medium"]
 
+        # Determine story protagonist
+        story_characters = self.parser.detect_characters(story_text)
+        if not story_characters:
+            for name in self.parser.detect_unknown_names(story_text):
+                self.parser.auto_learn_character(name)
+            story_characters = self.parser.detect_characters(story_text)
+        
+        default_protagonist = story_characters[0] if story_characters else {
+            "key": "rahat",
+            "name": "রাহাত",
+            "asset": "characters/rahat.png"
+        }
+        active_characters = [default_protagonist]
+
         for idx, sentence in enumerate(sentences, start=1):
             characters = self.parser.detect_characters(sentence)
             if not characters:
                 for name in self.parser.detect_unknown_names(sentence):
                     self.parser.auto_learn_character(name)
                 characters = self.parser.detect_characters(sentence)
+
+            if characters:
+                active_characters = characters
+            else:
+                characters = active_characters
 
             # Assign 3D transforms & actions
             characters_3d = []
@@ -153,6 +172,7 @@ class RuleBased3DDirector:
             scenes.append({
                 "scene_id": idx,
                 "style": style,
+                "background": background,
                 "environment": {
                     "background": background,
                     "lighting": lighting_preset

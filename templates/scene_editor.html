@@ -2,56 +2,351 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Story → Scene Editor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎬 Story Studio — 1-Click Story to Video | vmaker</title>
 
 <style>
+:root {
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --secondary: #0ea5e9;
+  --success: #10b981;
+  --bg: #0f172a;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-  font-family: Arial, sans-serif;
-  background: #f2f4f8;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding: 24px;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+header {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+h1 {
+  font-size: 26px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge {
+  font-size: 12px;
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.links {
+  display: flex;
+  gap: 12px;
+}
+
+.links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  transition: all 0.2s;
+}
+
+.links a:hover {
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
   padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+label.label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #e2e8f0;
+  font-size: 15px;
 }
 
 textarea {
   width: 100%;
-  height: 130px;
+  height: 150px;
   font-size: 16px;
-  padding: 10px;
+  line-height: 1.6;
+  padding: 14px;
+  border-radius: 8px;
+  background: #0b0f19;
+  border: 1px solid var(--card-border);
+  color: #fff;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+textarea:focus {
+  border-color: var(--primary);
+}
+
+.controls-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.control-group label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+select {
+  width: 100%;
+  padding: 10px 12px;
+  background: #0b0f19;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+}
+
+select:focus {
+  border-color: var(--primary);
+}
+
+.btn-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
 }
 
 button {
-  padding: 8px 14px;
+  padding: 12px 22px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
   cursor: pointer;
-  font-size: 14px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.scene {
-  background: #fff;
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+  flex: 1.5;
+  min-width: 250px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+}
+
+.btn-secondary {
+  background: #334155;
+  color: #e2e8f0;
+  flex: 1;
+  min-width: 180px;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #475569;
+}
+
+/* Progress Box */
+#progressBox {
+  display: none;
+  background: #0b0f19;
+  border: 1px solid #3b82f6;
+  border-radius: 10px;
+  padding: 20px;
   margin-top: 20px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 12px;
+  background: #1e293b;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  width: 5%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+.progress-step-text {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #93c5fd;
+}
+
+/* Video Result Box */
+#videoResultBox {
+  display: none;
+  background: #052e16;
+  border: 1px solid #10b981;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 24px;
+  text-align: center;
+}
+
+#videoResultBox h3 {
+  color: #34d399;
+  font-size: 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+video {
+  max-width: 100%;
+  width: 720px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  margin: 0 auto 20px auto;
+  display: block;
+  background: #000;
+}
+
+.video-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.btn-download {
+  background: #10b981;
+  color: #fff;
+  text-decoration: none;
+  padding: 12px 24px;
   border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.btn-download:hover {
+  background: #059669;
+}
+
+.btn-3d {
+  background: #6366f1;
+  color: #fff;
+  text-decoration: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.btn-3d:hover {
+  background: #4f46e5;
+}
+
+/* Scenes List */
+.scene {
+  background: #1e293b;
+  border: 1px solid var(--card-border);
+  margin-top: 20px;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.scene h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #38bdf8;
 }
 
 .row {
   display: flex;
-  gap: 15px;
+  gap: 16px;
   margin-top: 10px;
+  flex-wrap: wrap;
 }
 
 .col {
   flex: 1;
-}
-
-.label {
-  font-weight: bold;
-  margin: 6px 0 4px;
+  min-width: 250px;
 }
 
 .preview {
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
   overflow: hidden;
-  height: 120px;
+  height: 130px;
+  background: #0b0f19;
+  margin-bottom: 8px;
 }
 
 .preview img {
@@ -62,7 +357,7 @@ button {
 
 .characters {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -76,56 +371,278 @@ button {
   height: 60px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid #6366f1;
+  margin-bottom: 4px;
 }
 
 input {
   width: 100%;
-  padding: 6px;
+  padding: 8px 12px;
+  background: #0b0f19;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
 }
 
 .save-btn {
-  background: #2d7ef7;
+  background: #2563eb;
   color: #fff;
-  border: none;
-  border-radius: 4px;
-  margin-top: 10px;
+  margin-top: 14px;
+  padding: 8px 16px;
+  font-size: 14px;
 }
 
 .save-btn.saved {
-  background: #2da44e;
+  background: #059669;
 }
 
 .error {
-  color: red;
-  margin-top: 10px;
-  font-weight: bold;
+  color: #f87171;
+  margin-top: 12px;
+  font-weight: 600;
+  font-size: 14px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>📖 Story → Scene Editor</h1>
+<div class="container">
+  <header>
+    <h1>🎬 Story Studio <span class="badge">1-Click Auto Video</span></h1>
+    <div class="links">
+      <a href="/animation/player/" target="_blank">🎮 3D Animation Player</a>
+      <a href="/admin/" target="_blank">⚙️ Admin Panel</a>
+    </div>
+  </header>
 
-<label class="label">গল্প লিখুন</label>
-<textarea id="storyText">
+  <div class="card">
+    <label class="label">✍️ আপনার গল্পটি লিখুন (Write Your Story)</label>
+    <textarea id="storyText" placeholder="এখানে বাংলায় গল্প লিখুন...">
 এক বিকেলের নরম আলোয় ওয়ারিনা নদীর ধারে বসে ছিল।
 হঠাৎ সে দেখল, জলে ভাসছে একটি ছোট কাগজের নৌকা।
 নৌকার ভেতরে লেখা ছিল কারও স্বপ্নের কথা।
 ওয়ারিনা নৌকাটি তুলে আবার জলে ছেড়ে দিল।
 সে ভাবল, স্বপ্নেরও নদী দরকার বয়ে চলার।
-</textarea>
+    </textarea>
 
-<br><br>
-<button onclick="generateScenes()">🎬 Generate Scenes</button>
+    <div class="controls-row">
+      <div class="control-group">
+        <label>🎙️ ভয়েসওভার (Voice)</label>
+        <select id="voiceSelect">
+          <option value="bn-BD-NabanitaNeural">Nabanita (মেয়ে শিশু / কার্টুন উপযোগী)</option>
+          <option value="bn-BD-PradeepNeural">Pradeep (পুরুষ কণ্ঠ)</option>
+          <option value="bn-IN-TanishaaNeural">Tanishaa (নারী কণ্ঠ)</option>
+          <option value="bn-IN-BashkarNeural">Bashkar (পুরুষ কণ্ঠ - ভারত)</option>
+        </select>
+      </div>
 
-<div id="error" class="error"></div>
-<div id="scenes"></div>
+      <div class="control-group">
+        <label>🎨 অ্যানিমেশন স্টাইল (Animation Style)</label>
+        <select id="styleSelect">
+          <option value="pixar_3d">3D Pixar Cartoon (3D সিনেমাটিক স্টাইল)</option>
+          <option value="2d_cute">2D Cute Cartoon (ক্লাসিক ২ডি স্টাইল)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button id="btnAutoVideo" class="btn-primary" onclick="generateFullVideo()">
+        🚀 1-Click: Generate Full Video (গল্প থেকে সরাসরি ভিডিও বানান)
+      </button>
+      <a href="/animation/player/" target="_blank" style="text-decoration:none;">
+        <button type="button" style="background: linear-gradient(135deg, #ef4444, #b91c1c); border-color:transparent; font-weight:700;">
+          🔴 3D Studio Recorder (৩ডি অ্যানিমেশন রেকর্ড)
+        </button>
+      </a>
+      <button id="btnScenesOnly" class="btn-secondary" onclick="generateScenes()">
+        🎬 View Scenes (শুধু দৃশ্য দেখুন)
+      </button>
+    </div>
+
+    <!-- Progress Box -->
+    <div id="progressBox">
+      <div class="progress-header">
+        <span id="progressTitle">⚙️ ভিডিও প্রস্তুত করা হচ্ছে...</span>
+        <span id="progressPercent">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div id="progressBarFill" class="progress-bar-fill"></div>
+      </div>
+      <div id="progressStepText" class="progress-step-text">গল্প বিশ্লেষণ ও সিন তৈরি হচ্ছে...</div>
+    </div>
+
+    <!-- Video Result Box -->
+    <div id="videoResultBox">
+      <h3>🎉 আপনার গল্প প্রসেস সম্পন্ন হয়েছে!</h3>
+      
+      <!-- Primary 3D Animation Call to Action -->
+      <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25)); border: 1px solid rgba(168, 85, 247, 0.5); border-radius: 12px; padding: 18px; margin-bottom: 20px; text-align: center;">
+        <h4 style="color: #c084fc; font-size: 18px; margin-bottom: 8px;">🎬 আসল ৩ডি অ্যানিমেশন ও লিপ-সিঙ্ক দেখতে এখানে যান:</h4>
+        <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 14px;">নিচের প্লেয়ারে আসল ৩ডি ক্যারেক্টার, মুখের নড়াচড়া (Lip-Sync) ও ক্যামেরা মোশন সহ লাইভ অ্যানিমেশন দেখতে ও ভিডিও রেকর্ড করতে পারবেন।</p>
+        <a id="btnOpen3D" class="btn-3d" href="/animation/player/" target="_blank" style="display: inline-block; padding: 12px 28px; font-size: 16px; font-weight: 700; background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
+          🔴 Open in 3D Studio Player (আসল ৩ডি ভিডিও দেখুন ও রেকর্ড করুন)
+        </a>
+      </div>
+
+      <details style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 12px; text-align: left;">
+        <summary style="cursor: pointer; color: #94a3b8; font-size: 13px; font-weight: 600;">🎞️ ২ডি ইমেজ স্লাইডশো প্রিভিউ দেখুন (2D Slide Preview)</summary>
+        <div style="margin-top: 12px; text-align: center;">
+          <video id="finalVideoPlayer" controls style="max-width: 100%; border-radius: 8px;"></video>
+          <div class="video-actions" style="margin-top: 10px;">
+            <a id="btnDownloadVideo" class="btn-download" href="#" download style="padding: 8px 16px; font-size: 13px;">
+              ⬇️ Download 2D Preview MP4
+            </a>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div id="error" class="error"></div>
+  </div>
+
+  <div id="scenes"></div>
+</div>
 
 <script>
-/* ===============================
-   Generate Scenes
-=============================== */
+let currentJobId = null;
+let pollTimer = null;
+
+/* =========================================================
+   1-Click Full Video Pipeline (Auto Video)
+========================================================= */
+async function generateFullVideo() {
+  const story = document.getElementById("storyText").value.trim();
+  const voice = document.getElementById("voiceSelect").value;
+  const style = document.getElementById("styleSelect").value;
+
+  const btnAuto = document.getElementById("btnAutoVideo");
+  const btnScenes = document.getElementById("btnScenesOnly");
+  const progressBox = document.getElementById("progressBox");
+  const videoResultBox = document.getElementById("videoResultBox");
+  const errorBox = document.getElementById("error");
+
+  errorBox.innerText = "";
+  videoResultBox.style.display = "none";
+
+  if (!story) {
+    errorBox.innerText = "গল্পের টেক্সট ফাঁকা হতে পারে না (Please enter a story)";
+    return;
+  }
+
+  btnAuto.disabled = true;
+  btnScenes.disabled = true;
+  btnAuto.innerText = "⏳ Processing Video...";
+  progressBox.style.display = "block";
+  updateProgress(5, "গল্প বিশ্লেষণ ও ৩ডি দৃশ্য তৈরি হচ্ছে...");
+
+  try {
+    const res = await fetch("/api/auto-video/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ story, voice, style, mode: "3d" })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.job_id) {
+      throw new Error(data.error || "ভিডিও রেন্ডারিং শুরু করতে ব্যর্থ হয়েছে");
+    }
+
+    currentJobId = data.job_id;
+    updateProgress(20, "ভয়েসওভার তৈরি ও অডিও প্রসেসিং শুরু হয়েছে...");
+
+    // Start polling job status
+    pollRenderStatus(data.job_id, data.project_id);
+
+  } catch (err) {
+    console.error(err);
+    errorBox.innerText = err.message || "Server error";
+    btnAuto.disabled = false;
+    btnScenes.disabled = false;
+    btnAuto.innerText = "🚀 1-Click: Generate Full Video (গল্প থেকে সরাসরি ভিডিও বানান)";
+    progressBox.style.display = "none";
+  }
+}
+
+function updateProgress(percent, stepText) {
+  const bar = document.getElementById("progressBarFill");
+  const textPercent = document.getElementById("progressPercent");
+  const textStep = document.getElementById("progressStepText");
+
+  bar.style.width = `${percent}%`;
+  textPercent.innerText = `${percent}%`;
+  if (stepText) textStep.innerText = stepText;
+}
+
+function pollRenderStatus(jobId, projectId) {
+  if (pollTimer) clearInterval(pollTimer);
+
+  pollTimer = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/render-jobs/${jobId}/`);
+      if (!res.ok) return;
+
+      const job = await res.json();
+      let stepText = "ভিডিও তৈরি হচ্ছে...";
+
+      if (job.status === "AUDIO_GENERATING") {
+        stepText = "🎙️ বাংলা ভয়েসওভার (TTS) অডিও তৈরি হচ্ছে...";
+      } else if (job.status === "SCENE_COMPILING") {
+        stepText = "🎞️ ৩ডি ব্যাকগ্রাউন্ড ও ক্যারেক্টার কম্পাইল করা হচ্ছে...";
+      } else if (job.status === "ENCODING") {
+        stepText = "🎬 ফুল HD MP4 ভিডিও ফাইল এনকোডিং হচ্ছে...";
+      } else if (job.status === "COMPLETED") {
+        clearInterval(pollTimer);
+        updateProgress(100, "✅ ভিডিও প্রস্তুত সম্পন্ন!");
+        showCompletedVideo(job, projectId);
+        return;
+      } else if (job.status === "FAILED") {
+        clearInterval(pollTimer);
+        document.getElementById("error").innerText = "রেন্ডারিং ব্যর্থ হয়েছে: " + (job.error_message || "Unknown error");
+        resetButtons();
+        return;
+      }
+
+      updateProgress(Math.max(job.progress || 20, 20), stepText);
+
+    } catch (e) {
+      console.warn("Polling error:", e);
+    }
+  }, 1500);
+}
+
+function showCompletedVideo(job, projectId) {
+  const videoBox = document.getElementById("videoResultBox");
+  const videoPlayer = document.getElementById("finalVideoPlayer");
+  const btnDownload = document.getElementById("btnDownloadVideo");
+  const btnOpen3D = document.getElementById("btnOpen3D");
+
+  videoPlayer.src = job.video_url;
+  btnDownload.href = job.video_url;
+  btnDownload.setAttribute("download", `story_cartoon_${job.project_id || ''}.mp4`);
+
+  if (projectId) {
+    btnOpen3D.href = `/animation/player/?project=${projectId}`;
+  }
+
+  videoBox.style.display = "block";
+  videoPlayer.load();
+
+  resetButtons();
+}
+
+function resetButtons() {
+  const btnAuto = document.getElementById("btnAutoVideo");
+  const btnScenes = document.getElementById("btnScenesOnly");
+  btnAuto.disabled = false;
+  btnScenes.disabled = false;
+  btnAuto.innerText = "🚀 1-Click: Generate Full Video (গল্প থেকে সরাসরি ভিডিও বানান)";
+}
+
+/* =========================================================
+   Generate Scenes Only (Manual Inspector)
+========================================================= */
 async function generateScenes() {
   const story = document.getElementById("storyText").value.trim();
   const errorBox = document.getElementById("error");
@@ -161,9 +678,9 @@ async function generateScenes() {
   }
 }
 
-/* ===============================
-   Render Scenes (DEDUP FIX)
-=============================== */
+/* =========================================================
+   Render Scenes
+========================================================= */
 function renderScenes(scenes) {
   const container = document.getElementById("scenes");
 
@@ -172,10 +689,9 @@ function renderScenes(scenes) {
     div.className = "scene";
     div.dataset.sceneId = scene.id;
 
-    const bg = scene.background;
-    const narration = scene.narration.text;
+    const bg = scene.background || (scene.environment && scene.environment.background) || { key: "default", type: "image", asset: "backgrounds/default.jpg" };
+    const narration = (scene.narration && typeof scene.narration === "object") ? (scene.narration.text || "") : (scene.narration || "");
 
-    // 🔥 HARD DEDUP characters by key
     const uniqueCharacters = Array.from(
       new Map(
         (scene.characters || []).map(c => [c.key, c])
@@ -191,7 +707,7 @@ function renderScenes(scenes) {
           <div class="preview">
             <img src="/media/${bg.asset}">
           </div>
-          <input value="${bg.key}">
+          <input class="bg-input" value="${bg.key || ''}">
         </div>
 
         <div class="col">
@@ -201,8 +717,8 @@ function renderScenes(scenes) {
               uniqueCharacters.length
                 ? uniqueCharacters.map(c => `
                     <div class="character">
-                      <img src="/media/${c.asset}">
-                      <div>${c.key}</div>
+                      <img src="/media/${c.asset || ''}">
+                      <div>${c.key || ''}</div>
                     </div>
                   `).join("")
                 : "<em>— No character —</em>"
@@ -211,22 +727,22 @@ function renderScenes(scenes) {
         </div>
       </div>
 
-      <div class="label">Narration</div>
-      <input value="${narration}">
+      <div class="label" style="margin-top:12px;">Narration</div>
+      <input class="narration-input" value="${narration}">
 
-      <div class="label">Duration (sec)</div>
-      <input type="number" value="${scene.duration}">
+      <div class="label" style="margin-top:12px;">Duration (sec)</div>
+      <input class="duration-input" type="number" value="${scene.duration || 8}">
 
-      <button class="save-btn">💾 Save Scene</button>
+      <button class="save-btn" onclick="saveScene(this)">💾 Save Scene</button>
     `;
 
     container.appendChild(div);
   });
 }
 
-/* ===============================
+/* =========================================================
    Save Scene
-=============================== */
+========================================================= */
 async function saveScene(btn) {
   const card = btn.closest(".scene");
   const sceneId = card.dataset.sceneId;

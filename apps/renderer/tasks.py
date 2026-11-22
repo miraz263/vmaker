@@ -4,6 +4,14 @@ from datetime import datetime
 from pathlib import Path
 from celery import shared_task
 
+# Ensure Pillow 10+ compatibility with MoviePy
+try:
+    import PIL.Image
+    if not hasattr(PIL.Image, 'ANTIALIAS'):
+        PIL.Image.ANTIALIAS = getattr(PIL.Image.Resampling, 'LANCZOS', None)
+except Exception:
+    pass
+
 try:
     from django.conf import settings
 except ImportError:
@@ -69,7 +77,7 @@ def render_project_video_task(self, job_id: str):
         job.progress = 50
         job.save(update_fields=["status", "progress"])
 
-        from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip, ColorClip
+        from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip, ColorClip, CompositeVideoClip
 
         clips = []
         for idx, sc in enumerate(scenes):
@@ -77,14 +85,43 @@ def render_project_video_task(self, job_id: str):
             duration = float(sc_data.get("duration", 6.0))
 
             # Resolve background visual
-            bg_rel = sc_data.get("background", {}).get("asset", "backgrounds/default.jpg")
+            bg_info = sc_data.get("background") or sc_data.get("environment", {}).get("background") or {}
+            if isinstance(bg_info, dict):
+                bg_rel = bg_info.get("asset", "backgrounds/default.jpg")
+            else:
+                bg_rel = "backgrounds/default.jpg"
             bg_abs = media_root / bg_rel
 
             if bg_abs.exists():
-                clip = ImageClip(str(bg_abs)).set_duration(duration)
+                bg_clip = ImageClip(str(bg_abs)).set_duration(duration).resize((1920, 1080))
             else:
                 # Fallback to elegant slate color if background file is missing
-                clip = ColorClip(size=(1920, 1080), color=(15, 23, 42)).set_duration(duration)
+                bg_clip = ColorClip(size=(1920, 1080), color=(15, 23, 42)).set_duration(duration)
+
+            # Character sprite overlay if available
+            character_clips = []
+            characters = sc_data.get("characters", [])
+            for char in characters:
+                if isinstance(char, dict):
+                    char_asset = char.get("asset")
+                    if char_asset:
+                        char_abs = media_root / char_asset
+                        if char_abs.exists():
+                            try:
+                                char_clip = (
+                                    ImageClip(str(char_abs))
+                                    .set_duration(duration)
+                                    .resize(height=650)
+                                    .set_position(("center", "bottom"))
+                                )
+                                character_clips.append(char_clip)
+                            except Exception as ce:
+                                print(f"Warning: could not overlay character {char_asset}: {ce}")
+
+            if character_clips:
+                clip = CompositeVideoClip([bg_clip] + character_clips, size=(1920, 1080)).set_duration(duration)
+            else:
+                clip = bg_clip
 
             # Attach Audio Narration if present
             audio_info = sc_data.get("audio", {})

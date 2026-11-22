@@ -81,6 +81,14 @@ def resolve_character_asset(key: str) -> str:
         for ext in [".png", ".jpg", ".jpeg", ".webp", ".glb"]:
             if (char_dir / f"{key}{ext}").exists():
                 return f"characters/{key}{ext}"
+
+    # Auto-fetch character sprite from web if missing
+    try:
+        from .web_assets import fetch_web_character
+        return fetch_web_character(key)
+    except Exception:
+        pass
+
     return f"characters/{key}.png"
 
 
@@ -90,6 +98,14 @@ def resolve_background_asset(key: str) -> str:
         for ext in [".jpg", ".jpeg", ".png", ".webp", ".glb"]:
             if (bg_dir / f"{key}{ext}").exists():
                 return f"backgrounds/{key}{ext}"
+
+    # Auto-fetch from web if missing
+    try:
+        from .web_assets import fetch_web_background
+        return fetch_web_background(key)
+    except Exception as e:
+        pass
+
     return f"backgrounds/{key}.jpg"
 
 

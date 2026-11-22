@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.shortcuts import render   # 🔥 THIS WAS MISSING
+from django.shortcuts import render
+from django.views.generic import RedirectView
 
 from rest_framework.routers import DefaultRouter
 from apps.projects.views import ProjectViewSet
@@ -18,6 +19,7 @@ def scene_editor_view(request):
 
 
 urlpatterns = [
+    path("", RedirectView.as_view(url="/editor/", permanent=False), name="home"),
     path("admin/", admin.site.urls),
 
     path("api/", include(router.urls)),

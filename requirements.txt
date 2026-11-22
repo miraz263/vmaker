@@ -11,3 +11,4 @@ dj-database-url>=2.2.0
 python-dotenv>=1.0.0
 gunicorn>=23.0.0
 edge-tts>=6.1.0
+packaging>=24.0
