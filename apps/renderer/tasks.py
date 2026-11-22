@@ -30,6 +30,34 @@ def get_media_url():
     return "/media/"
 
 
+def build_camera_filter(move: str, total_frames: int, fps: int, duration: float) -> str:
+    """
+    Smooth eased camera move over a still picture.
+    The picture is upscaled first so zoompan doesn't wobble from integer rounding.
+    """
+    n = max(total_frames - 1, 1)
+    t = f"(on/{n})"
+    ease = f"({t}*{t}*(3-2*{t}))"          # smoothstep: slow start, slow end
+    center_x = "(iw-iw/zoom)/2"
+    center_y = "(ih-ih/zoom)/2"
+
+    moves = {
+        "push_in":   (f"1+0.18*{ease}", center_x, center_y),
+        "pull_out":  (f"1.18-0.18*{ease}", center_x, center_y),
+        "pan_left":  ("1.15", f"(iw-iw/zoom)*(1-{ease})", center_y),
+        "pan_right": ("1.15", f"(iw-iw/zoom)*{ease}", center_y),
+        "tilt_up":   ("1.15", center_x, f"(ih-ih/zoom)*(1-{ease})"),
+    }
+    z, x, y = moves.get(move, moves["push_in"])
+    fade_out_start = max(duration - 0.35, 0)
+    return (
+        "scale=3840:2160:force_original_aspect_ratio=increase,crop=3840:2160,"
+        f"zoompan=z='{z}':x='{x}':y='{y}':d={total_frames}:s=1920x1080:fps={fps},"
+        f"fade=t=in:st=0:d=0.35,fade=t=out:st={fade_out_start:.2f}:d=0.35,"
+        "format=yuv420p"
+    )
+
+
 @shared_task(bind=True)
 def render_project_video_task(self, job_id: str):
     """
@@ -77,44 +105,50 @@ def render_project_video_task(self, job_id: str):
         job.progress = 50
         job.save(update_fields=["status", "progress"])
 
+        import hashlib
         import subprocess
-        from apps.ai_engine.web_assets import generate_pixar_scene_visual
+        from apps.ai_engine.storyboard import attach_visual_plan
+        from apps.ai_engine.web_assets import generate_scene_image
 
         temp_clips_dir = media_root / "videos" / "temp" / str(job.id)
         temp_clips_dir.mkdir(parents=True, exist_ok=True)
+
+        # Older projects were saved before the storyboard existed: plan them now.
+        if any(not (sc.data or {}).get("visual") for sc in scenes):
+            story = getattr(job.project, "story", None)
+            story_text = getattr(story, "text", "") if story else ""
+            datas = [sc.data or {} for sc in scenes]
+            attach_visual_plan(story_text or " ".join(
+                (d.get("narration") or {}).get("text", "") for d in datas), datas)
+            for sc, d in zip(scenes, datas):
+                sc.data = d
+                sc.save(update_fields=["data"])
 
         clip_paths = []
 
         for idx, sc in enumerate(scenes):
             sc_data = sc.data or {}
-            narration_text = sc_data.get("narration", {}).get("text", "")
-            characters = sc_data.get("characters", [])
-            char_name = characters[0].get("key", "panda") if characters else "panda"
-            if char_name in ["warina", "human", "character", "default"] or any(w in narration_text for w in ["পিকু", "পান্ডা", "জঙ্গল", "বন"]):
-                char_name = "panda"
+            visual = sc_data.get("visual") or {}
 
-            # 1. Resolve 3D Pixar Scene Visual
+            # 1. Scene picture (regenerated only when the prompt changes)
             scenes_dir = media_root / "scenes"
             scenes_dir.mkdir(parents=True, exist_ok=True)
-            scene_img_path = scenes_dir / f"scene_{sc.id}_pixar.jpg"
+            prompt_hash = hashlib.sha1(
+                f"{visual.get('prompt', '')}|{visual.get('seed', 42)}".encode("utf-8")
+            ).hexdigest()[:10]
+            scene_img_path = scenes_dir / f"scene_{sc.id}_{prompt_hash}.jpg"
 
             if not scene_img_path.exists() or scene_img_path.stat().st_size < 5000:
-                shot_type = "wide" if idx == 0 else ("close_up" if idx % 2 == 1 else "medium")
-                generate_pixar_scene_visual(
-                    scene_desc=narration_text,
-                    char_name=char_name,
-                    shot_type=shot_type,
+                used = generate_scene_image(
+                    prompt=visual.get("prompt", ""),
                     save_path=scene_img_path,
-                    seed=idx * 29 + 42,
-                    scene_index=idx
+                    seed=int(visual.get("seed", 42)),
                 )
-
-            if not scene_img_path.exists() or scene_img_path.stat().st_size < 5000:
-                pixar_fallback = media_root / "scenes" / "pixar" / f"panda_scene_{(idx % 5) + 1}.jpg"
-                if pixar_fallback.exists():
-                    scene_img_path = pixar_fallback
-                else:
-                    scene_img_path = media_root / "test_sana_panda.jpg"
+                visual["image_source"] = used
+                visual["image"] = f"scenes/{scene_img_path.name}"
+                sc_data["visual"] = visual
+                sc.data = sc_data
+                sc.save(update_fields=["data"])
 
             # 2. Resolve Narration Audio
             audio_info = sc_data.get("audio", {})
@@ -137,30 +171,10 @@ def render_project_video_task(self, job_id: str):
                     duration = 5.0
 
             fps = 25
+            hold = 0.6  # breathing room after each narration line
+            duration += hold
             total_frames = int(duration * fps)
-
-            # 3. Cinematic Camera Movement Filter
-            motion_type = idx % 4
-            if motion_type == 0:
-                vf = (
-                    f"scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,"
-                    f"zoompan=z='min(zoom+0.0012,1.20)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={total_frames}:s=1920x1080:fps={fps}"
-                )
-            elif motion_type == 1:
-                vf = (
-                    f"scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,"
-                    f"zoompan=z=1.12:x='if(lte(on,1),(iw-iw/zoom)/3,x+0.8)':y='ih/2-(ih/zoom/2)':d={total_frames}:s=1920x1080:fps={fps}"
-                )
-            elif motion_type == 2:
-                vf = (
-                    f"scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,"
-                    f"zoompan=z='min(zoom+0.0015,1.25)':x='iw/2-(iw/zoom/2)':y='ih/3-(ih/zoom/3)':d={total_frames}:s=1920x1080:fps={fps}"
-                )
-            else:
-                vf = (
-                    f"scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,"
-                    f"zoompan=z='max(1.18-0.0012*on,1.0)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={total_frames}:s=1920x1080:fps={fps}"
-                )
+            vf = build_camera_filter(visual.get("camera", "push_in"), total_frames, fps, duration)
 
             clip_out = temp_clips_dir / f"clip_{idx}.mp4"
             cmd_clip = [
@@ -174,16 +188,19 @@ def render_project_video_task(self, job_id: str):
 
             cmd_clip += [
                 "-vf", vf,
+                "-af", "apad,aresample=44100",
                 "-t", str(duration),
                 "-c:v", "libx264",
                 "-pix_fmt", "yuv420p",
+                "-r", str(fps),
                 "-c:a", "aac",
+                "-ar", "44100",
+                "-ac", "2",
                 "-b:a", "192k",
-                "-shortest",
                 "-preset", "fast",
                 str(clip_out)
             ]
-            subprocess.run(cmd_clip, check=True)
+            subprocess.run(cmd_clip, check=True, capture_output=True)
             clip_paths.append(clip_out)
 
             job.progress = int(50 + (30 * ((idx + 1) / len(scenes))))
@@ -212,8 +229,9 @@ def render_project_video_task(self, job_id: str):
             cmd_final = [
                 "ffmpeg", "-y",
                 "-f", "concat", "-safe", "0", "-i", str(concat_list_file),
-                "-i", str(bgm_path),
-                "-filter_complex", "[1:a]volume=0.15[bgm];[0:a][bgm]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+                "-stream_loop", "-1", "-i", str(bgm_path),
+                "-filter_complex",
+                "[1:a]volume=0.12[bgm];[0:a][bgm]amix=inputs=2:duration=first:dropout_transition=2:normalize=0[aout]",
                 "-map", "0:v", "-map", "[aout]",
                 "-c:v", "copy",
                 "-c:a", "aac",
@@ -226,7 +244,7 @@ def render_project_video_task(self, job_id: str):
                 "-c", "copy",
                 str(abs_output_path)
             ]
-        subprocess.run(cmd_final, check=True)
+        subprocess.run(cmd_final, check=True, capture_output=True)
 
         # 5. Job Complete
         job.status = "COMPLETED"
@@ -239,8 +257,13 @@ def render_project_video_task(self, job_id: str):
         return f"Success: Video rendered to {rel_output_path}"
 
     except Exception as e:
+        import subprocess
+        detail = str(e)
+        if isinstance(e, subprocess.CalledProcessError) and e.stderr:
+            stderr = e.stderr.decode("utf-8", "ignore") if isinstance(e.stderr, bytes) else e.stderr
+            detail += "\n" + stderr[-1500:]
         job.status = "FAILED"
-        job.error_message = str(e)
+        job.error_message = detail
         job.save(update_fields=["status", "error_message"])
         print(f"RenderJob {job_id} failed: {e}")
         return f"Error: {e}"

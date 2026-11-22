@@ -3,7 +3,7 @@ import uuid
 import threading
 import subprocess
 from datetime import datetime
-import imageio_ffmpeg
+import shutil
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -234,7 +234,7 @@ class Save3DVideoAPIView(APIView):
                 f.write(chunk)
 
         try:
-            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+            ffmpeg_exe = shutil.which("ffmpeg") or "ffmpeg"
             cmd = [
                 ffmpeg_exe,
                 "-y",

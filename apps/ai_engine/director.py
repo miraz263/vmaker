@@ -3,6 +3,7 @@ import json
 import re
 import requests
 from pathlib import Path
+from .storyboard import attach_visual_plan, call_llm_json
 from .services import StoryParser, u_normalize, normalize_text, calculate_duration, split_sentences
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -113,25 +114,17 @@ class RuleBased3DDirector:
         shot_cycle = ["wide", "medium", "close_up", "medium"]
 
         # Determine story protagonist
-        if any(w in story_text for w in ["পিকু", "পান্ডা", "জঙ্গল", "বন"]):
-            default_protagonist = {
-                "key": "panda",
-                "name": "পিকু",
-                "asset": "scenes/pixar/panda_scene_1.jpg",
-                "model_3d": "models/characters/panda.glb"
-            }
-        else:
+        story_characters = self.parser.detect_characters(story_text)
+        if not story_characters:
+            for name in self.parser.detect_unknown_names(story_text):
+                self.parser.auto_learn_character(name)
             story_characters = self.parser.detect_characters(story_text)
-            if not story_characters:
-                for name in self.parser.detect_unknown_names(story_text):
-                    self.parser.auto_learn_character(name)
-                story_characters = self.parser.detect_characters(story_text)
-            
-            default_protagonist = story_characters[0] if story_characters else {
-                "key": "rahat",
-                "name": "রাহাত",
-                "asset": "characters/rahat.png"
-            }
+
+        default_protagonist = story_characters[0] if story_characters else {
+            "key": "hero",
+            "name": "hero",
+            "asset": "characters/hero.png"
+        }
         active_characters = [default_protagonist]
 
         for idx, sentence in enumerate(sentences, start=1):
@@ -260,36 +253,10 @@ Output JSON schema:
 }}
 Only return valid, raw JSON."""
 
-    try:
-        # Try Groq first if available
-        if groq_api_key:
-            res = requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {groq_api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "llama-3.3-70b-versatile",
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": story_text}
-                    ],
-                    "response_format": {"type": "json_object"},
-                    "temperature": 0.2
-                },
-                timeout=15
-            )
-            if res.status_code == 200:
-                data = res.json()
-                content = data["choices"][0]["message"]["content"]
-                parsed = json.loads(content)
-                if "scenes" in parsed and isinstance(parsed["scenes"], list):
-                    return parsed["scenes"]
-
-    except Exception as e:
-        print(f"LLM 3D Director API error, falling back to rule-based: {e}")
-
+    parsed = call_llm_json(system_prompt, story_text)
+    if parsed and isinstance(parsed.get("scenes"), list) and parsed["scenes"]:
+        return parsed["scenes"]
+    print("LLM 3D Director unavailable, falling back to rule-based")
     return None
 
 
@@ -301,9 +268,12 @@ def generate_3d_scenes_from_story(story_text: str, style: str = "pixar_3d") -> l
     Main director entrypoint.
     Uses LLM 3D Director when API keys are available, otherwise uses RuleBased3DDirector.
     """
-    llm_scenes = generate_llm_3d_scenes(story_text, style=style)
-    if llm_scenes:
-        return llm_scenes
+    scenes = generate_llm_3d_scenes(story_text, style=style)
+    if not scenes:
+        scenes = RuleBased3DDirector().compose_3d_scenes(story_text, style=style)
 
-    rule_director = RuleBased3DDirector()
-    return rule_director.compose_3d_scenes(story_text, style=style)
+    try:
+        attach_visual_plan(story_text, scenes)
+    except Exception as e:
+        print(f"Storyboard planning failed, renderer will use narration text: {e}")
+    return scenes
